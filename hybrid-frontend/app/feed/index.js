@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, FlatList, Button, Text } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { View, FlatList, Button } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import FeedItem from './FeedItem';
 import createCable, { subscribeToFeed } from '../services/WebSocket';
 import * as SecureStore from 'expo-secure-store';
@@ -11,7 +12,7 @@ const Feed = () => {
   const [userId, setUserId] = useState(null);
   const cableRef = useRef(null);
   const subscriptionRef = useRef(null);
-  const navigation = useNavigation();
+  const router = useRouter();
 
   // Obtener authToken y userId al montar el componente
   useEffect(() => {
@@ -34,9 +35,7 @@ const Feed = () => {
       if (authToken && !cableRef.current) {
         cableRef.current = createCable(authToken);
         subscriptionRef.current = subscribeToFeed(cableRef.current, (data) => {
-          // Maneja diferentes acciones transmitidas desde el servidor
           if (data.action === "new_event_picture") {
-            // Nueva imagen de evento
             setPosts((prevPosts) => [
               {
                 type: "event_picture",
@@ -46,7 +45,6 @@ const Feed = () => {
               ...prevPosts
             ]);
           } else if (data.action === "user_tagged") {
-            // Usuario etiquetado en una imagen
             setPosts((prevPosts) => [
               {
                 type: "user_tagged",
@@ -59,7 +57,6 @@ const Feed = () => {
         });
       }
 
-      // Limpieza de la conexión al desmontar la vista de Feed
       return () => {
         if (subscriptionRef.current) {
           subscriptionRef.current.unsubscribe();
@@ -76,7 +73,7 @@ const Feed = () => {
   return (
     <View style={{ flex: 1 }}>
       {/* Botón de regreso */}
-      <Button title="Back" onPress={() => navigation.goBack()} />
+      <Button title="Back" onPress={() => router.back()} />
 
       {/* Lista de publicaciones */}
       <FlatList
