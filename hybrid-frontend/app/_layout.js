@@ -1,10 +1,14 @@
 // app/_layout.js
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, SafeAreaView  } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Feed from './feed';  // Asegúrate de que Feed esté correctamente importado
 import BackButton from './components/BackButton';
 import * as Notifications from 'expo-notifications';
 import { registerForPushNotificationsAsync, setNotificationHandler } from '../util/Notifications';
 import NotificationListener from '../util/NotificationListener';
+
 // Estilos globales
 const styles = StyleSheet.create({
   container: {
@@ -45,9 +49,11 @@ const styles = StyleSheet.create({
     color: "#B17457",
   },
   backButton: {
-
+    // Agrega los estilos para el botón de regreso si es necesario
   }
 });
+
+const Tab = createBottomTabNavigator();
 
 const Layout = ({ children }) => {
   const notificationListener = useRef(null);
@@ -79,14 +85,23 @@ const Layout = ({ children }) => {
       console.log('Push Notification Token:', token);
     });
   }, []);
-  
-    return (
+
+  return (
+    <NavigationContainer>
       <SafeAreaView style={styles.container}>
         <NotificationListener />
+        <StatusBar barStyle="light-content" backgroundColor="#A67B5B" />
         <Text style={styles.title}></Text>
-        {children}
+        
+        {/* Aquí puedes definir el Tab.Navigator con las pantallas que desees */}
+        <Tab.Navigator>
+          <Tab.Screen name="Feed" component={Feed} />
+        </Tab.Navigator>
+
+        {children} 
       </SafeAreaView>
-    );
-  };
-  
-  export { Layout, styles };
+    </NavigationContainer>
+  );
+};
+
+export default Layout;

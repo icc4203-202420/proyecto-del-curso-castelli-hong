@@ -1,7 +1,11 @@
 // src/services/WebSocket.js
-
+import { NGROK_URL } from '@env';
 const createCable = (authToken) => {
-    const NGROK_URL = 'YOUR_NGROK_URL'; // Reemplaza con tu URL de ngrok
+  if (!authToken) {
+    console.error("Auth token is missing");
+    return;
+  }
+  
     const ws = new WebSocket(`ws://${NGROK_URL}/cable?token=${authToken}`);
   
     ws.onopen = () => {

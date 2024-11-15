@@ -6,6 +6,7 @@ import FeedItem from './FeedItem';
 import createCable, { subscribeToFeed } from '../services/WebSocket';
 import * as SecureStore from 'expo-secure-store';
 
+
 const Feed = () => {
   const [posts, setPosts] = useState([]);
   const [authToken, setAuthToken] = useState(null);
