@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Button, TextInput, Image, Alert, StyleSheet, Text, TouchableOpacity, ActivityIndicator, FlatList, Dimensions } from 'react-native';
+import { View, TextInput, Image, Alert, StyleSheet, Text, TouchableOpacity, ActivityIndicator, FlatList, ScrollView, StatusBar } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { NGROK_URL } from '@env';
 import { useRouter } from 'expo-router';
+import BackButton from '../components/BackButton';
 
 const SharePhoto = ({ eventId, eventName }) => {
   const [imageUri, setImageUri] = useState(null);
@@ -112,19 +113,30 @@ const SharePhoto = ({ eventId, eventName }) => {
     } finally {
       setLoading(false);
     }
-  };   
+  };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#A67B5B" />
+
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push(`/events/${eventId}`)} style={styles.backButton}>
-          <Text style={styles.backButtonText}>Back</Text>
-        </TouchableOpacity>
+        <BackButton onPress={() => router.push(`/events/${eventId}`)} />
         <Text style={styles.eventTitle}>{eventName}</Text>
       </View>
 
-      <Button title="Seleccionar imagen" onPress={pickImage} />
-      {imageUri && <Image source={{ uri: imageUri }} style={styles.image} />}
+      {/* Mostrar un contenedor gris si no hay imagen */}
+      {!imageUri ? (
+        <View style={styles.imagePlaceholder}>
+          <Text style={styles.placeholderText}>Selecciona una imagen</Text>
+        </View>
+      ) : (
+        <Image source={{ uri: imageUri }} style={styles.image} />
+      )}
+
+      <TouchableOpacity onPress={pickImage} style={styles.imagePickerButton}>
+        <Text style={styles.imagePickerText}>Seleccionar imagen</Text>
+      </TouchableOpacity>
+
       <TextInput
         placeholder="Describe tu foto"
         value={description}
@@ -133,6 +145,7 @@ const SharePhoto = ({ eventId, eventName }) => {
       />
 
       <Text style={styles.subHeader}>Etiqueta amigos:</Text>
+
       <FlatList
         data={friends}
         keyExtractor={(item) => item.id.toString()}
@@ -143,10 +156,7 @@ const SharePhoto = ({ eventId, eventName }) => {
               <Text style={styles.friendHandle}>@{item.handle}</Text>
             </View>
             <TouchableOpacity
-              style={[
-                styles.selectionBox,
-                selectedFriends.includes(item.id) && styles.selectedBox
-              ]}
+              style={[styles.selectionBox, selectedFriends.includes(item.id) && styles.selectedBox]}
               onPress={() => toggleFriendSelection(item.id)}
             >
             </TouchableOpacity>
@@ -154,35 +164,33 @@ const SharePhoto = ({ eventId, eventName }) => {
         )}
       />
 
-      <Button title="Subir foto" onPress={uploadPhoto} disabled={loading} />
-      {loading && <ActivityIndicator size="large" color="#0000ff" />}
-    </View>
+      <TouchableOpacity
+        onPress={uploadPhoto}
+        style={[styles.uploadButton, loading && styles.disabledButton]}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={styles.uploadButtonText}>Publicar</Text>
+        )}
+      </TouchableOpacity>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    alignItems: 'center',
     flex: 1,
-    backgroundColor: '#ffffff', // Set background to white
+    padding: 20,
+    backgroundColor: 'rgb(250, 247, 240)',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start', // Align left for BackButton and eventTitle
     marginBottom: 20,
-  },
-  backButton: {
-    backgroundColor: '#007bff',
-    padding: 10,
-    borderRadius: 5,
-  },
-  backButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   eventTitle: {
     fontSize: 20,
@@ -190,17 +198,44 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     flex: 1,
   },
+  imagePlaceholder: {
+    width: '100%',
+    height: 300,
+    backgroundColor: '#D3D3D3',  // Gris claro para el placeholder
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+    marginVertical: 15,
+  },
+  placeholderText: {
+    color: '#fff',
+    fontSize: 18,
+    textAlign: 'center',
+  },
   image: {
     width: '100%',
     height: 300,
     marginVertical: 15,
     borderRadius: 10,
   },
+  imagePickerButton: {
+    backgroundColor: '#A67B5B',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  imagePickerText: {
+    color: '#fff',
+    fontSize: 16,
+  },
   input: {
     borderBottomWidth: 1,
     width: '100%',
     marginBottom: 15,
     padding: 5,
+    fontSize: 16,
   },
   subHeader: {
     fontSize: 16,
@@ -209,13 +244,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   friendContainer: {
-    width: Dimensions.get('window').width - 80,
+    width: '100%',
     padding: 15,
     marginVertical: 5,
     backgroundColor: '#f0f0f0',
     borderRadius: 5,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
   friendName: {
     fontSize: 16,
@@ -238,8 +274,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#007bff',
     borderColor: '#007bff',
   },
-  selectionText: {
+  uploadButton: {
+    backgroundColor: '#A67B5B',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  disabledButton: {
+    backgroundColor: '#d6d6d6',
+  },
+  uploadButtonText: {
     color: '#fff',
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });
