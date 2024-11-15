@@ -34,6 +34,13 @@ class API::V1::EventPicturesController < ApplicationController
       # Enviar notificaciones a los usuarios etiquetados
       notify_tagged_friends(@event_picture)
 
+      # Transmitir la nueva imagen al feed de los usuarios que participaron en el evento
+      ActionCable.server.broadcast("feed_channel", {
+        action: "new_event_picture",
+        event_picture: @event_picture.as_json.merge(image_url: @event_picture.image_url),
+        tagged_users: User.where(id: tag_handles).select(:id, :first_name, :last_name, :handle)
+      })
+
       render json: { message: 'Picture uploaded successfully', event_picture: @event_picture }, status: :created
     else
       render json: { errors: @event_picture.errors.full_messages }, status: :unprocessable_entity
@@ -64,6 +71,13 @@ class API::V1::EventPicturesController < ApplicationController
       tagging = Tagging.create(user: user, event_picture: event_picture)
 
       if tagging.persisted?
+        # Transmitir la actualización de etiquetado al feed
+        ActionCable.server.broadcast("feed_channel", {
+          action: "user_tagged",
+          event_picture: event_picture.as_json.merge(image_url: event_picture.image_url),
+          tagged_user: user.as_json(only: [:id, :first_name, :last_name, :handle])
+        })
+
         render json: { message: 'User tagged successfully' }, status: :ok
       else
         render json: { error: 'Failed to tag user' }, status: :unprocessable_entity
