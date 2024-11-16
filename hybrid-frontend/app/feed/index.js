@@ -1,149 +1,107 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, FlatList, Button } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
-import { NGROK_URL } from '@env';
-import * as SecureStore from 'expo-secure-store';
+// src/components/Feed.jsx
+import { useEffect, useState } from 'react';
+import { Box, Button, VStack, Text, Input, Select, Image } from '@chakra-ui/react';
+import api from '../api'; // Instancia de Axios
+import * as ActionCable from '@rails/actioncable';
 
-// Función para crear y conectar el WebSocket
-const createCable = (authToken) => {
-  if (!authToken) {
-    console.error("Auth token is missing");
-    return;
-  }
-
-  const ws = new WebSocket(`ws://${NGROK_URL}/cable?token=${authToken}`);
-
-  ws.onopen = () => {
-    console.log("Connected to WebSocket");
-  };
-
-  ws.onclose = () => {
-    console.log("Disconnected from WebSocket");
-  };
-
-  ws.onerror = (error) => {
-    console.error("WebSocket Error:", error);
-  };
-
-  return ws;
-};
-
-// Función para suscribirse al canal Feed
-const subscribeToFeed = (ws, onReceived) => {
-  const message = {
-    command: 'subscribe',
-    identifier: JSON.stringify({ channel: 'FeedChannel' }),
-  };
-
-  ws.onopen = () => {
-    ws.send(JSON.stringify(message));
-  };
-
-  ws.onmessage = (event) => {
-    const response = JSON.parse(event.data);
-
-    // Ignora los mensajes de ping o cualquier otro mensaje no relevante
-    if (response.type === "ping" || !response.message) return;
-
-    // Pasa los datos recibidos al callback
-    onReceived(response.message);
-  };
-
-  return {
-    unsubscribe: () => {
-      const unsubscribeMessage = {
-        command: 'unsubscribe',
-        identifier: JSON.stringify({ channel: 'FeedChannel' }),
-      };
-      ws.send(JSON.stringify(unsubscribeMessage));
-      ws.close();
-    },
-  };
-};
-
-// Componente principal de Feed
-const Feed = () => {
+const Feed = ({ user }) => {
   const [posts, setPosts] = useState([]);
-  const [authToken, setAuthToken] = useState(null);
-  const [userId, setUserId] = useState(null);
-  const cableRef = useRef(null);
-  const subscriptionRef = useRef(null);
-  const router = useRouter();
+  const [filter, setFilter] = useState({ type: null, value: null });
+  const [error, setError] = useState('');
+  const cableConnection = ActionCable.createConsumer("ws://localhost:3001/cable");
 
-  // Obtener authToken y userId al montar el componente
   useEffect(() => {
-    const getTokenAndUserId = async () => {
+    // Cargar publicaciones iniciales del feed
+    const fetchPosts = async () => {
       try {
-        const storedAuthToken = await SecureStore.getItemAsync('authToken');
-        const storedUserId = await SecureStore.getItemAsync('USER_ID');
-        setAuthToken(storedAuthToken);
-        setUserId(storedUserId);
-      } catch (error) {
-        console.error('Error:', error);
+        const response = await api.get(`/v1/feed`, { headers: { Authorization: `Bearer ${user.token}` } });
+        setPosts(response.data);
+      } catch (err) {
+        setError('Error al cargar las publicaciones.');
       }
     };
-    getTokenAndUserId();
-  }, []);
+    fetchPosts();
 
-  // Configuración del WebSocket y manejo de publicaciones en tiempo real
-  useFocusEffect(
-    React.useCallback(() => {
-      if (authToken && !cableRef.current) {
-        cableRef.current = createCable(authToken);
-        subscriptionRef.current = subscribeToFeed(cableRef.current, (data) => {
-          if (data.action === "new_event_picture") {
-            setPosts((prevPosts) => [
-              {
-                type: "event_picture",
-                ...data.event_picture,
-                tagged_users: data.tagged_users
-              },
-              ...prevPosts
-            ]);
-          } else if (data.action === "user_tagged") {
-            setPosts((prevPosts) => [
-              {
-                type: "user_tagged",
-                event_picture: data.event_picture,
-                tagged_user: data.tagged_user
-              },
-              ...prevPosts
-            ]);
+    // Configurar la conexión WebSocket para recibir actualizaciones en tiempo real
+    const subscription = cableConnection.subscriptions.create(
+      { channel: 'FeedChannel', user_id: user.id },
+      {
+        connected() {
+          console.log('Conectado al FeedChannel.');
+        },
+        received(data) {
+          if (filter.type && filter.value) {
+            // Aplicar filtro a las publicaciones en tiempo real
+            if (data.post[filter.type] === filter.value) {
+              setPosts((prevPosts) => [data.post, ...prevPosts]);
+            }
+          } else {
+            setPosts((prevPosts) => [data.post, ...prevPosts]);
           }
-        });
+        },
+        rejected() {
+          setError('No se pudo autenticar la conexión.');
+        },
       }
+    );
 
-      return () => {
-        if (subscriptionRef.current) {
-          subscriptionRef.current.unsubscribe();
-          subscriptionRef.current = null;
-        }
-        if (cableRef.current) {
-          cableRef.current.close();
-          cableRef.current = null;
-        }
-      };
-    }, [authToken])
-  );
+    // Limpiar la conexión WebSocket al desmontar el componente
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [filter, user.id, user.token]);
+
+  const handleFilterChange = (type, value) => {
+    if (value === '') {
+      setFilter({ type: null, value: null });
+    } else {
+      setFilter({ type, value });
+    }
+  };
 
   return (
-    <View style={{ flex: 1 }}>
-      {/* Botón de regreso */}
-      <Button title="Back" onPress={() => router.back()} />
+    <Box p={4} maxW="lg" borderWidth="1px" borderRadius="lg" overflowY="auto">
+      <Text fontSize="xl" mb={4}>
+        <b>Feed</b>: Actividad en tiempo real
+      </Text>
 
-      {/* Lista de publicaciones */}
-      <FlatList
-        data={posts}
-        renderItem={({ item }) => (
-          <View>
-            <Text>{item.type === "event_picture" ? "New Event Picture" : "User Tagged"}</Text>
-          </View>
-        )}
-        keyExtractor={(item, index) => index.toString()}
-        inverted // Muestra las publicaciones más recientes en la parte superior
+      {/* Filtro de publicaciones */}
+      <Select
+        placeholder="Filtrar por"
+        mb={4}
+        onChange={(e) => handleFilterChange('type', e.target.value)}
+      >
+        <option value="friend">Amistad</option>
+        <option value="bar">Bar</option>
+        <option value="country">País</option>
+        <option value="beer">Cerveza</option>
+      </Select>
+      <Input
+        placeholder="Especifica el valor para filtrar"
+        mb={4}
+        onChange={(e) => handleFilterChange(filter.type, e.target.value)}
       />
-    </View>
+
+      {/* Publicaciones */}
+      <VStack spacing={4} align="stretch">
+        {posts.map((post) => (
+          <Box key={post.id} p={3} bg="gray.100" borderRadius="md">
+            <Text fontWeight="bold">{post.author.nickname} publicó:</Text>
+            <Text>{post.content}</Text>
+            {post.image && <Image src={post.image} alt="Imagen del evento" />}
+            <Button
+              mt={2}
+              colorScheme="teal"
+              onClick={() => (window.location.href = `/event/${post.event_id}`)}
+            >
+              Ver más
+            </Button>
+          </Box>
+        ))}
+      </VStack>
+
+      {error && <Text color="red.500" mt={2}>{error}</Text>}
+    </Box>
   );
 };
 
