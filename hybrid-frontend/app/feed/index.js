@@ -4,7 +4,7 @@ import { Button, Card, Icon, Input } from '@rneui/themed';
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store'; // Para manejar authToken
 import io from 'socket.io-client'; // Usar socket.io
-
+import BackButton from '../components/BackButton';
 const Feed = () => {
   const [posts, setPosts] = useState([]);
   const [filter, setFilter] = useState({ type: null, value: null });
@@ -79,6 +79,7 @@ const Feed = () => {
 
   return (
     <View style={styles.container}>
+      <BackButton/>
       <Text style={styles.title}>Feed: Actividad en tiempo real</Text>
 
       {/* Filtro de publicaciones */}
