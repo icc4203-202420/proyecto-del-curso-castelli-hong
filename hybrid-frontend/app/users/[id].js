@@ -1,93 +1,110 @@
+// src/components/Feed.jsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, StatusBar } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { View, Text, TextInput, FlatList, Image, StyleSheet } from 'react-native';
+import { Button, Card, Icon, Input, ButtonGroup } from '@rneui/themed';
 import axios from 'axios';
-import { NGROK_URL } from '@env';
-import { Tab, TabView } from '@rneui/themed';
-import FriendsTab from '../components/FriendsTab';
-import FriendRequestsTab from '../components/FriendRequestsTab';
-import BackButton from '../components/BackButton';
+import * as ActionCable from '@rails/actioncable';
 
-const UserProfileScreen = () => {
-  const { id: userId } = useLocalSearchParams();
-  const router = useRouter();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [index, setIndex] = useState(0);
+const Feed = ({ user }) => {
+  const [posts, setPosts] = useState([]);
+  const [filter, setFilter] = useState({ type: null, value: null });
+  const [error, setError] = useState('');
+  const cableConnection = ActionCable.createConsumer("ws://localhost:3001/cable");
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    // Cargar publicaciones iniciales del feed
+    const fetchPosts = async () => {
       try {
-        const response = await axios.get(`${NGROK_URL}/api/v1/users/${userId}`);
-        if (response.status === 200) {
-          setUser(response.data);
-        } else {
-          console.error('Failed to fetch user data:', response.data);
-        }
-      } catch (error) {
-        console.error('Error fetching user profile:', error.message);
-      } finally {
-        setLoading(false);
+        const response = await axios.get(`/v1/feed`, {
+          headers: { Authorization: `Bearer ${user.token}` },
+        });
+        setPosts(response.data);
+      } catch (err) {
+        setError('Error al cargar las publicaciones.');
       }
     };
+    fetchPosts();
 
-    if (userId) {
-      fetchUserProfile();
-    } else {
-      console.error('No user ID found');
-      setLoading(false);
-    }
-  }, [userId]);
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#A67B5B" />
-        <Text style={styles.loadingText}>Loading user profile...</Text>
-      </View>
+    // Configurar la conexión WebSocket para recibir actualizaciones en tiempo real
+    const subscription = cableConnection.subscriptions.create(
+      { channel: 'FeedChannel', user_id: user.id },
+      {
+        connected() {
+          console.log('Conectado al FeedChannel.');
+        },
+        received(data) {
+          if (filter.type && filter.value) {
+            // Aplicar filtro a las publicaciones en tiempo real
+            if (data.post[filter.type] === filter.value) {
+              setPosts((prevPosts) => [data.post, ...prevPosts]);
+            }
+          } else {
+            setPosts((prevPosts) => [data.post, ...prevPosts]);
+          }
+        },
+        rejected() {
+          setError('No se pudo autenticar la conexión.');
+        },
+      }
     );
-  }
+
+    // Limpiar la conexión WebSocket al desmontar el componente
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [filter, user.id, user.token]);
+
+  const handleFilterChange = (type, value) => {
+    if (value === '') {
+      setFilter({ type: null, value: null });
+    } else {
+      setFilter({ type, value });
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#A67B5B" />
-      <BackButton />
-      {user ? (
-        <>
-          <Text style={styles.title}>{user.handle}</Text>
-          <Text style={styles.subtitle}>
-            {user.first_name} {user.last_name}
-          </Text>
+      <Text style={styles.title}>Feed: Actividad en tiempo real</Text>
 
-          <Tab
-            value={index}
-            onChange={setIndex}
-            indicatorStyle={styles.indicator}
-            containerStyle={styles.tabContainer}
-            variant="default"
-          >
-            <Tab.Item
-              title="Friends"
-              titleStyle={index === 0 ? styles.activeTabTitle : styles.inactiveTabTitle}
-            />
-            <Tab.Item
-              title="Friend Requests"
-              titleStyle={index === 1 ? styles.activeTabTitle : styles.inactiveTabTitle}
-            />
-          </Tab>
+      {/* Filtro de publicaciones */}
+      <Input
+        placeholder="Filtrar por tipo (friend, bar, country, beer)"
+        onChangeText={(value) => handleFilterChange('type', value)}
+        containerStyle={styles.input}
+      />
+      <Input
+        placeholder="Especifica el valor para filtrar"
+        onChangeText={(value) => handleFilterChange(filter.type, value)}
+        containerStyle={styles.input}
+      />
 
-          <TabView value={index} onChange={setIndex} animationType="spring" style={styles.tabView}>
-            <TabView.Item style={styles.tabViewContent}>
-              <FriendsTab userId={userId} />
-            </TabView.Item>
-            <TabView.Item style={styles.tabViewContent}>
-              <FriendRequestsTab userId={userId} />
-            </TabView.Item>
-          </TabView>
-        </>
-      ) : (
-        <Text style={styles.noUserText}>No user information found.</Text>
-      )}
+      {/* Publicaciones */}
+      <FlatList
+        data={posts}
+        keyExtractor={(post) => post.id.toString()}
+        renderItem={({ item: post }) => (
+          <Card containerStyle={styles.card}>
+            <Card.Title>{post.author.nickname} publicó:</Card.Title>
+            <Card.Divider />
+            <Text>{post.content}</Text>
+            {post.image && (
+              <Image
+                source={{ uri: post.image }}
+                style={styles.image}
+                resizeMode="cover"
+              />
+            )}
+            <Button
+              title="Ver más"
+              onPress={() => (window.location.href = `/event/${post.event_id}`)}
+              icon={<Icon name="arrow-right" type="font-awesome" color="white" />}
+              buttonStyle={styles.button}
+            />
+          </Card>
+        )}
+      />
+
+      {error && <Text style={styles.error}>{error}</Text>}
     </View>
   );
 };
@@ -95,67 +112,34 @@ const UserProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: 'rgb(250, 247, 240)',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgb(250, 247, 240)',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#6c757d',
+    padding: 10,
   },
   title: {
-    fontSize: 28,
+    fontSize: 18,
     fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#333',
     marginBottom: 10,
   },
-  subtitle: {
-    fontSize: 18,
-    textAlign: 'center',
-    color: '#555',
-    marginBottom: 20,
+  input: {
+    marginBottom: 10,
   },
-  tabContainer: {
-    backgroundColor: '#fff',
+  card: {
+    marginBottom: 10,
     borderRadius: 10,
-    marginHorizontal: 5,
-    elevation: 1,
   },
-  indicator: {
-    backgroundColor: '#A67B5B',
-    height: 3,
+  image: {
+    width: '100%',
+    height: 200,
+    marginBottom: 10,
+    borderRadius: 10,
   },
-  activeTabTitle: {
-    color: '#A67B5B',
-    fontWeight: 'bold',
+  button: {
+    backgroundColor: '#2089dc',
+    borderRadius: 10,
   },
-  inactiveTabTitle: {
-    color: '#6c757d',
-  },
-  tabView: {
-    flex: 1,
+  error: {
+    color: 'red',
     marginTop: 10,
-  },
-  tabViewContent: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    elevation: 2,
-  },
-  noUserText: {
-    fontSize: 16,
-    color: '#6c757d',
-    textAlign: 'center',
-    marginTop: 20,
   },
 });
 
-export default UserProfileScreen;
+export default Feed;
