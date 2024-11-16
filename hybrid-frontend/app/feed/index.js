@@ -2,11 +2,67 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, FlatList, Button } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import FeedItem from './FeedItem';
-import createCable, { subscribeToFeed } from '../services/WebSocket';
+import { NGROK_URL } from '@env';
 import * as SecureStore from 'expo-secure-store';
 
+// Función para crear y conectar el WebSocket
+const createCable = (authToken) => {
+  if (!authToken) {
+    console.error("Auth token is missing");
+    return;
+  }
 
+  const ws = new WebSocket(`ws://${NGROK_URL}/cable?token=${authToken}`);
+
+  ws.onopen = () => {
+    console.log("Connected to WebSocket");
+  };
+
+  ws.onclose = () => {
+    console.log("Disconnected from WebSocket");
+  };
+
+  ws.onerror = (error) => {
+    console.error("WebSocket Error:", error);
+  };
+
+  return ws;
+};
+
+// Función para suscribirse al canal Feed
+const subscribeToFeed = (ws, onReceived) => {
+  const message = {
+    command: 'subscribe',
+    identifier: JSON.stringify({ channel: 'FeedChannel' }),
+  };
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify(message));
+  };
+
+  ws.onmessage = (event) => {
+    const response = JSON.parse(event.data);
+
+    // Ignora los mensajes de ping o cualquier otro mensaje no relevante
+    if (response.type === "ping" || !response.message) return;
+
+    // Pasa los datos recibidos al callback
+    onReceived(response.message);
+  };
+
+  return {
+    unsubscribe: () => {
+      const unsubscribeMessage = {
+        command: 'unsubscribe',
+        identifier: JSON.stringify({ channel: 'FeedChannel' }),
+      };
+      ws.send(JSON.stringify(unsubscribeMessage));
+      ws.close();
+    },
+  };
+};
+
+// Componente principal de Feed
 const Feed = () => {
   const [posts, setPosts] = useState([]);
   const [authToken, setAuthToken] = useState(null);
@@ -80,9 +136,11 @@ const Feed = () => {
       <FlatList
         data={posts}
         renderItem={({ item }) => (
-          <FeedItem post={item} />
+          <View>
+            <Text>{item.type === "event_picture" ? "New Event Picture" : "User Tagged"}</Text>
+          </View>
         )}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item, index) => index.toString()}
         inverted // Muestra las publicaciones más recientes en la parte superior
       />
     </View>
