@@ -4,6 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { NGROK_URL } from '@env';
 import * as SecureStore from 'expo-secure-store';
+import BackButton from '../components/BackButton';
 
 // Función para crear y conectar el WebSocket
 const createCable = (authToken) => {
@@ -12,8 +13,8 @@ const createCable = (authToken) => {
     return;
   }
 
-  const ws = new WebSocket(`ws://${NGROK_URL}/cable?token=${authToken}`);
-
+  // const ws = new WebSocket(`ws://${NGROK_URL}/cable?token=${authToken}`);
+  const ws = new WebSocket(`ws://localhost:3001/cable`);
   ws.onopen = () => {
     console.log("Connected to WebSocket");
   };
@@ -129,10 +130,9 @@ const Feed = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Botón de regreso */}
-      <Button title="Back" onPress={() => router.back()} />
+      <BackButton/>
 
-      {/* Lista de publicaciones */}
+      {/* publicaciones */}
       <FlatList
         data={posts}
         renderItem={({ item }) => (

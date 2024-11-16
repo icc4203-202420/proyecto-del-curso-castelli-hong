@@ -6,7 +6,8 @@ const createCable = (authToken) => {
     return;
   }
   
-    const ws = new WebSocket(`ws://${NGROK_URL}/cable?token=${authToken}`);
+    // const ws = new WebSocket(`ws://${NGROK_URL}/cable?token=${authToken}`);
+    const ws = new WebSocket(`ws://localhost:3001/cable`);
   
     ws.onopen = () => {
       console.log("Connected to WebSocket");
