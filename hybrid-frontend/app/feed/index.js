@@ -4,6 +4,7 @@ import { Button, Card, Icon, Input } from '@rneui/themed';
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store'; // Para manejar authToken
 import io from 'socket.io-client'; // Usar socket.io
+import { useNavigation } from '@react-navigation/native'; // Para manejar navegación
 
 const Feed = () => {
   const [posts, setPosts] = useState([]);
@@ -11,6 +12,7 @@ const Feed = () => {
   const [error, setError] = useState('');
   const [authToken, setAuthToken] = useState(null);
   const socket = io('ws://localhost:3001'); // Establecer la conexión al servidor WebSocket
+  const navigation = useNavigation(); // Hook para manejar navegación
 
   useEffect(() => {
     // Obtener authToken desde SecureStore
@@ -79,6 +81,14 @@ const Feed = () => {
 
   return (
     <View style={styles.container}>
+      {/* Botón de "Atrás" */}
+      <Button
+        title="Atrás"
+        onPress={() => router.back()}
+        icon={<Icon name="arrow-left" type="font-awesome" color="white" />}
+        buttonStyle={styles.backButton}
+      />
+
       <Text style={styles.title}>Feed: Actividad en tiempo real</Text>
 
       {/* Filtro de publicaciones */}
@@ -111,7 +121,7 @@ const Feed = () => {
             )}
             <Button
               title="Ver más"
-              onPress={() => (window.location.href = `/event/${post.event_id}`)}
+              onPress={() => navigation.navigate('EventDetails', { id: post.event_id })}
               icon={<Icon name="arrow-right" type="font-awesome" color="white" />}
               buttonStyle={styles.button}
             />
@@ -150,6 +160,12 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: '#2089dc',
     borderRadius: 10,
+  },
+  backButton: {
+    backgroundColor: '#ff6347',
+    borderRadius: 10,
+    marginBottom: 10,
+    alignSelf: 'flex-start',
   },
   error: {
     color: 'red',
