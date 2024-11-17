@@ -1,7 +1,5 @@
 Rails.application.routes.draw do
-  # devise_for :users
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-  get 'current_user', to: 'current_user#index'
+  # Devise para autenticación
   devise_for :users, path: '', path_names: {
     sign_in: 'api/v1/login',
     sign_out: 'api/v1/logout',
@@ -12,39 +10,48 @@ Rails.application.routes.draw do
     registrations: 'api/v1/registrations'
   }
 
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
+  # Health Check
   get "up" => "rails/health#show", as: :rails_health_check
+  mount ActionCable.server => '/cable'
 
-  # Defines the root path route ("/")
-  # root "posts#index"
-
+  # Rutas de la API
   namespace :api, defaults: { format: :json } do
     namespace :v1 do
+      # Ruta para el feed
+      get 'feed', to: 'feed#index'
+
+      # Rutas de bares y eventos
       resources :bars do
         resources :events, only: [:index]
       end
+
+      # Rutas de cervezas
       resources :beers do
         resources :reviews, only: [:create, :index, :show, :update, :destroy]
         resources :bars
       end
+
+      # Rutas de asistencia
       resource :attendances, only: [:create]
+
+      # Rutas de eventos
       resources :events, only: [:index, :show, :create, :update, :destroy] do
         member do
-          # get :attendees, to: 'attendances#users'
-          # post 'check_in'
-          get :pictures  # Esto creará una ruta para /api/v1/events/:id/pictures
+          get :pictures
           post :generate_video
           resource :attendances, only: [:show, :create, :destroy]
         end
 
+        # Rutas de imágenes de eventos
         resources :event_pictures, only: [:index, :show, :create] do
           member do
-            post :tag_user  # Ruta para etiquetar usuarios en una imagen /api/v1/event_pictures/:id/tag_user
+            post :tag_user
             get :tagged_users
           end
         end
       end
+
+      # Rutas de usuarios
       resources :users do
         resources :reviews, only: [:index]
         resources :friendships, only: [:index, :create]
@@ -57,8 +64,8 @@ Rails.application.routes.draw do
         post :push_token, on: :member
       end
 
+      # Rutas de reseñas
       resources :reviews, only: [:index, :show, :create, :update, :destroy]
     end
   end
-
 end

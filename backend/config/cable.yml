@@ -1,5 +1,10 @@
 development:
   adapter: async
+  allowed_request_origins:
+    - http://localhost:19006 # Expo Go en local
+    - http://127.0.0.1:19006 # Expo Go en local (otra variante)
+    - <%= ENV['NGROK_URL'] %> # URL pública generada por ngrok
+    - "*"
 
 test:
   adapter: test
@@ -8,3 +13,5 @@ production:
   adapter: redis
   url: <%= ENV.fetch("REDIS_URL") { "redis://localhost:6379/1" } %>
   channel_prefix: backend_production
+  allowed_request_origins:
+    - https://<YOUR_PRODUCTION_DOMAIN>

@@ -4,18 +4,21 @@ import { Button, Card, Icon, Input } from '@rneui/themed';
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store'; // Para manejar authToken
 import io from 'socket.io-client'; // Usar socket.io
-<<<<<<< HEAD
-import BackButton from '../components/BackButton';
-=======
 import { useNavigation } from '@react-navigation/native'; // Para manejar navegación
+import { NGROK_URL } from '@env'; // Importa NGROK_URL desde el archivo .env
 
->>>>>>> origin/entrega-2.3
 const Feed = () => {
   const [posts, setPosts] = useState([]);
   const [filter, setFilter] = useState({ type: null, value: null });
   const [error, setError] = useState('');
   const [authToken, setAuthToken] = useState(null);
-  const socket = io('ws://localhost:3001'); // Establecer la conexión al servidor WebSocket
+
+  // Configuración de WebSocket con la URL de ngrok
+  const socket = io(`${NGROK_URL}/cable`, {
+    transports: ['websocket'], // Usar solo WebSocket
+    path: '/cable', // Coincide con la ruta de ActionCable en Rails
+  });
+
   const navigation = useNavigation(); // Hook para manejar navegación
 
   useEffect(() => {
@@ -26,8 +29,10 @@ const Feed = () => {
         if (!token) {
           throw new Error('No se encontró authToken.');
         }
+        console.log('AuthToken obtenido:', token);
         setAuthToken(token);
       } catch (err) {
+        console.error('Error al obtener el token de autenticación:', err.message);
         setError('Error al obtener el token de autenticación.');
       }
     };
@@ -38,14 +43,22 @@ const Feed = () => {
   useEffect(() => {
     if (!authToken) return;
 
+    // Configurar Axios con la URL base de ngrok
+    const api = axios.create({
+      baseURL: `${NGROK_URL}/v1`,
+      timeout: 5000,
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
     // Cargar publicaciones iniciales del feed
     const fetchPosts = async () => {
       try {
-        const response = await axios.get(`/v1/feed`, {
-          headers: { Authorization: `Bearer ${authToken}` },
-        });
+        console.log('Solicitando publicaciones desde:', `${NGROK_URL}/v1/feed`);
+        const response = await api.get(`/feed`);
+        console.log('Publicaciones iniciales cargadas:', response.data);
         setPosts(response.data);
       } catch (err) {
+        console.error('Error al cargar las publicaciones:', err.message, err.response);
         setError('Error al cargar las publicaciones.');
       }
     };
@@ -54,22 +67,35 @@ const Feed = () => {
 
     // Configurar la conexión WebSocket para recibir actualizaciones en tiempo real
     socket.on('connect', () => {
-      console.log('Conectado al FeedChannel.');
+      console.log('Conexión WebSocket establecida. ID del socket:', socket.id);
     });
 
     socket.on('received', (data) => {
+      console.log('Datos recibidos a través de WebSocket:', data);
+
       if (filter.type && filter.value) {
         // Aplicar filtro a las publicaciones en tiempo real
         if (data.post[filter.type] === filter.value) {
+          console.log('Publicación filtrada y agregada:', data.post);
           setPosts((prevPosts) => [data.post, ...prevPosts]);
         }
       } else {
+        console.log('Publicación agregada:', data.post);
         setPosts((prevPosts) => [data.post, ...prevPosts]);
       }
     });
 
+    socket.on('disconnect', () => {
+      console.log('WebSocket desconectado.');
+    });
+
+    socket.on('error', (err) => {
+      console.error('Error en la conexión WebSocket:', err.message);
+    });
+
     // Limpiar la conexión WebSocket al desmontar el componente
     return () => {
+      console.log('Desconectando WebSocket...');
       socket.off('received');
       socket.disconnect();
     };
@@ -77,8 +103,10 @@ const Feed = () => {
 
   const handleFilterChange = (type, value) => {
     if (value === '') {
+      console.log('Filtro eliminado.');
       setFilter({ type: null, value: null });
     } else {
+      console.log('Filtro actualizado:', { type, value });
       setFilter({ type, value });
     }
   };
@@ -88,7 +116,13 @@ const Feed = () => {
       {/* Botón de "Atrás" */}
       <Button
         title="Atrás"
-        onPress={() => router.back()}
+        onPress={() => {
+          if (navigation.canGoBack()) {
+            navigation.goBack();
+          } else {
+            navigation.navigate('Home'); // Redirige a la pantalla principal si no hay pantalla previa
+          }
+        }}
         icon={<Icon name="arrow-left" type="font-awesome" color="white" />}
         buttonStyle={styles.backButton}
       />
