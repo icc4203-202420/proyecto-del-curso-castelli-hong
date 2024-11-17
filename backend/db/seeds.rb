@@ -56,4 +56,24 @@ if Rails.env.development?
   #     FactoryBot.create(:review, user: users.sample, beer: beer, text: Faker::Lorem.sentence(word_count: rand(15..30)), rating: rand(1..5))
   #   end
   # end
+
+  users = (1..9).map do |i|
+    FactoryBot.create(:user,
+      email: "#{i}@#{i}.com",
+      handle: "number_#{i}",
+      first_name: "number #{i}",
+      last_name: "number #{i}",
+      password: '123456')
+  end
+
+  # Crear relaciones de amistad aleatorias entre los usuarios
+  users.each_with_index do |user, index|
+    # Seleccionar 2 usuarios aleatorios diferentes al actual
+    friends = users.reject { |u| u == user }
+    selected_friends = friends.sample(2)
+
+    selected_friends.each do |friend|
+      FactoryBot.create(:friendship, user: user, friend: friend)
+    end
+  end
 end

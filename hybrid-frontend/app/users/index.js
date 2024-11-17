@@ -6,7 +6,6 @@ import { NGROK_URL } from '@env';
 import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
 import EventModal from './EventModal';
-import { Layout } from '../_layout';
 import BackButton from '../components/BackButton';
 
 const UserSearchScreen = () => {
@@ -98,9 +97,8 @@ const UserSearchScreen = () => {
   };
 
   return (
-    <Layout>
-      <BackButton/>
       <View style={styles.container}>
+        <BackButton/>
         <Input
           placeholder="Buscar"
           value={searchText}
@@ -142,7 +140,6 @@ const UserSearchScreen = () => {
           friendId={selectedFriendId}
         />
       </View>
-    </Layout>
   );
 };
 

@@ -3,7 +3,6 @@ import { View, StatusBar, FlatList, Text, StyleSheet, TouchableOpacity, Modal, A
 import axios from 'axios';
 import { NGROK_URL } from '@env';
 import { useRouter } from 'expo-router';
-import { Layout } from '../_layout';
 import { MaterialIcons } from '@expo/vector-icons';
 
 const EventIndex = () => {
@@ -29,7 +28,6 @@ const EventIndex = () => {
   };
 
   return (
-    <Layout>
       <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#A67B5B" />
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -61,7 +59,6 @@ const EventIndex = () => {
           />
         )}
       </View>
-    </Layout>
   );
 };
 

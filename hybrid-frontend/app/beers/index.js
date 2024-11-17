@@ -4,8 +4,7 @@ import { Input, Icon, Card } from '@rneui/themed';
 import { useRouter } from 'expo-router';
 import { NGROK_URL } from '@env';
 import * as SecureStore from 'expo-secure-store';
-import BackButton from '../components/BackButton'; // Importar el BackButton
-import { Layout } from '../_layout';
+import BackButton from '../components/BackButton'; 
 
 const BeerSearchScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,9 +51,9 @@ const BeerSearchScreen = () => {
   }, [searchQuery, beers]); // Filter whenever searchQuery or beers change
 
   return (
-    <Layout>
-      <BackButton />
+      
       <View style={styles.container}>
+        <BackButton />
         <Input
           placeholder="Search for a beer"
           value={searchQuery}
@@ -89,7 +88,6 @@ const BeerSearchScreen = () => {
           ListEmptyComponent={!loading && <Text style={styles.emptyText}>No beers found.</Text>}
         />
       </View>
-    </Layout>
   );
 };
 

@@ -151,11 +151,11 @@ ActiveRecord::Schema[7.1].define(version: 2024_11_17_201833) do
     t.index ["bar_id"], name: "index_events_on_bar_id"
   end
 
-  create_table "feed_presences", force: :cascade do |t|
+  create_table "feed", force: :cascade do |t|
     t.integer "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["user_id"], name: "index_feed_presences_on_user_id"
+    t.index ["user_id"], name: "index_feed_on_user_id"
   end
 
   create_table "friendships", force: :cascade do |t|
@@ -232,7 +232,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_11_17_201833) do
   add_foreign_key "event_pictures", "events"
   add_foreign_key "event_pictures", "users"
   add_foreign_key "events", "bars"
-  add_foreign_key "feed_presences", "users"
+  add_foreign_key "feed", "users"
   add_foreign_key "friendships", "bars"
   add_foreign_key "friendships", "events"
   add_foreign_key "friendships", "users"

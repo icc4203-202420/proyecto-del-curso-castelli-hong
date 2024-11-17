@@ -1,6 +1,6 @@
-class CreateFeedPresences < ActiveRecord::Migration[7.1]
+class CreateFeed < ActiveRecord::Migration[7.1]
   def change
-    create_table :feed_presences do |t|
+    create_table :feed do |t|
       t.references :user, null: false, foreign_key: true
 
       t.timestamps

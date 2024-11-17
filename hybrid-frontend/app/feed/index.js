@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { View, Text, StyleSheet, ActivityIndicator, Image, TouchableOpacity, FlatList, TextInput, RefreshControl } from 'react-native';
 import { Icon } from '@rneui/themed';
 import { NGROK_URL } from '@env';
-
+import BackButton from '../components/BackButton';
 const Feed = () => {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,14 +21,15 @@ const Feed = () => {
       if (token && userId) {
         const response = await fetch(`${NGROK_URL}/api/v1/feed?user_id=${userId}`, {
           method: 'GET',
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `${token}` },
         });
 
         if (response.ok) {
           const data = await response.json();
           setFeed(data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
         } else {
-          console.error('Error fetching feed');
+          const errorData = await response.json();
+          console.error('Error fetching feed:', errorData);
         }
       }
     } catch (error) {
@@ -124,12 +125,8 @@ const Feed = () => {
 
   return (
     <View style={styles.container}>
+      <BackButton/>
       <View style={styles.header}>
-        {/* Back Button */}
-        <TouchableOpacity onPress={() => router.push('/')} style={styles.backButton}>
-          <Icon name="arrow-left" type="feather" size={24} color="#B17457" />
-        </TouchableOpacity>
-        
         <Text style={styles.headerTitle}>Feed</Text>
         <TouchableOpacity onPress={() => toggleFilter()} style={styles.filterButton}>
           <Text style={styles.filterButtonText}>Filtrar</Text>
