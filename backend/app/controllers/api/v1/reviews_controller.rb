@@ -16,12 +16,19 @@ class API::V1::ReviewsController < ApplicationController
     else
       @reviews = Review.all
     end
-
     render json: {
-      reviews: @reviews.as_json(include: {
+    reviews: @reviews.as_json(
+      only: [:rating, :text, :created_at],
+      include: {
         user: { only: [:handle, :email] }
-      })
-    }, status: :ok
+      }
+    )
+  }, status: :ok
+    # render json: {
+    #   reviews: @reviews.as_json(include: {
+    #     user: { only: [:handle, :email] }
+    #   })
+    # }, status: :ok
   end
 
   def show

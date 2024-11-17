@@ -48,9 +48,10 @@ class API::V1::BeersController < ApplicationController
         thumbnail_url: url_for(@beer.thumbnail)
       })
     end
-    
+
     reviews_data = @beer.reviews.map do |review|
       {
+        created_at: review.created_at,
         rating: review.rating,
         text: review.text,
         user: {

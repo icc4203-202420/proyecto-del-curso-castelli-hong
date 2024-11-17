@@ -93,9 +93,9 @@ const BeerReviews = ({ beerId }) => {
           <Slider
             value={rating * 10}
             onValueChange={(value) => setRating(value / 10)} 
-            minimumValue={10}  // Los valores se multiplican por 10
-            maximumValue={50}  // Los valores se multiplican por 10
-            step={1}  // Usamos pasos enteros
+            minimumValue={10} 
+            maximumValue={50} 
+            step={1} 
             thumbTintColor="#4E342E"
             minimumTrackTintColor="#6D4C41"
             maximumTrackTintColor="#D7CCC8"

@@ -57,7 +57,7 @@ const Reviews = ({ beerId, beer }) => {
   //   return new Date(dateString).toLocaleDateString(undefined, options);
   // };
   const formatDate = (dateString) => {
-    if (!dateString) return '' ;
+    if (!dateString) return 'No date available';
     const date = new Date(dateString);
     if (isNaN(date)) {
       return 'Invalid Date';
