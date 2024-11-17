@@ -164,14 +164,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   searchInput: {
-    backgroundColor: 'rgb(250, 247, 240)',
-    color: '#B17457',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    backgroundColor: '#F8F8F8',  // Lighter background for better contrast
+    color: '#333',  // Darker text for better readability
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,  // More rounded edges for a modern look
     margin: 16,
     borderWidth: 1,
-    borderColor: '#B17457',
+    borderColor: '#E0E0E0',  // Lighter border for a more subtle effect
+    elevation: 2,  // Adds a subtle shadow for depth on Android
+    shadowColor: '#000',  // Shadow for iOS
+    shadowOffset: { width: 0, height: 2 },  // Shadow position
+    shadowOpacity: 0.1,  // Light shadow
+    shadowRadius: 6,  // Soft shadow spread
   },
   loadingContainer: {
     flex: 1,
