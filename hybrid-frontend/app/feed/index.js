@@ -42,7 +42,41 @@ const Feed = () => {
   };
 
   useEffect(() => {
-    fetchFeed();
+    const initializeFeedAndSocket = async () => {
+      await fetchFeed();  
+      const userId = await SecureStore.getItemAsync('USER_ID'); // Get user_id outside WebSocket initialization
+      const socket = new WebSocket(`${NGROK_URL.replace('http', 'ws')}/cable`);
+      socket.onopen = () => {
+        console.log('WEBSOCKET CONNECTED !');
+        socket.send(
+          JSON.stringify({
+            command: 'subscribe',
+            identifier: JSON.stringify({
+              channel: 'Channel',
+              user_id: userId, 
+            }),
+          })
+        );
+      };
+
+      socket.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        if (data.message && data.message.type === 'new_feed_item') {
+          fetchFeed();
+        }
+      };
+      socket.onerror = (e) => {
+        console.error('WebSocket error:', e);
+      };
+      socket.onclose = (e) => {
+        console.log('WebSocket closed:', e);
+      };
+      return () => {
+        socket.close();
+      };
+    };
+  
+    initializeFeedAndSocket(); 
   }, []);
 
   const onRefresh = React.useCallback(() => {
