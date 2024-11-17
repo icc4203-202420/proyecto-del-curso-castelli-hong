@@ -47,9 +47,6 @@ const styles = StyleSheet.create({
   buttonTitleSecondary: {
     color: "#B17457",
   },
-  backButton: {
-    // Agrega los estilos para el botón de regreso si es necesario
-  }
 });
 
 const Tab = createBottomTabNavigator();

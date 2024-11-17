@@ -5,6 +5,7 @@ import { View, Text, StyleSheet, ActivityIndicator, Image, TouchableOpacity, Fla
 import { Icon } from '@rneui/themed';
 import { NGROK_URL } from '@env';
 import BackButton from '../components/BackButton';
+import FeedItem from './FeedItem';
 const Feed = () => {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -72,49 +73,6 @@ const Feed = () => {
     return matchesType && matchesSearchText;
   });
 
-  const renderFeedItem = ({ item }) => {
-    const formattedDate = new Date(item.created_at).toLocaleString();
-
-    return (
-      <View style={styles.post}>
-        {item.type === 'event_picture' && (
-          <TouchableOpacity onPress={() => router.push(`/events/${item.event_id}`)}>
-            <Text style={styles.title}>{item.event_name || 'Unnamed Event'}</Text>
-            <View style={styles.userInfo}>
-              <Icon name="user" type="feather" size={16} color="#9CA3AF" />
-              <Text style={styles.userName}>{item.user_handle}</Text>
-            </View>
-            {item.image_url && <Image source={{ uri: item.image_url }} style={styles.image} />}
-            <Text style={styles.description}>{item.description}</Text>
-            <View style={styles.dateContainer}>
-              <Icon name="calendar" type="feather" size={16} color="#9CA3AF" />
-              <Text style={styles.date}>{formattedDate}</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-
-        {item.type === 'beer_review' && (
-          <TouchableOpacity onPress={() => router.push(`/beers/${item.beer_id}`)}>
-            <Text style={styles.title}>{item.beer_name || 'Unnamed Beer'}</Text>
-            <View style={styles.userInfo}>
-              <Icon name="user" type="feather" size={16} color="#9CA3AF" />
-              <Text style={styles.userName}>{item.user_name}</Text>
-            </View>
-            <View style={styles.ratingContainer}>
-              <Icon name="star" type="feather" size={16} color="#FFA500" />
-              <Text style={styles.rating}>{item.rating}</Text>
-            </View>
-            <Text style={styles.description}>{item.review_text}</Text>
-            <View style={styles.dateContainer}>
-              <Icon name="clock" type="feather" size={16} color="#9CA3AF" />
-              <Text style={styles.date}>{formattedDate}</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  };
-
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -125,28 +83,33 @@ const Feed = () => {
 
   return (
     <View style={styles.container}>
-      <BackButton/>
+      <BackButton />
       <View style={styles.header}>
-        {/* <Text style={styles.headerTitle}>Feed</Text> */}
+        {/* Botón de filtrar */}
         <TouchableOpacity onPress={() => toggleFilter()} style={styles.filterButton}>
+          <Icon name="filter-list" type="material" color="#FFF" size={20} />
           <Text style={styles.filterButtonText}>Filtrar</Text>
         </TouchableOpacity>
-        <Text style={styles.filterIndicator}>
-          Filtro activo: {activeFilter.charAt(0).toUpperCase() + activeFilter.slice(1)}
-        </Text>
+  
+        {/* Indicador del filtro activo */}
+        <View style={styles.filterIndicator}>
+          <Text style={styles.filterIndicatorText}>
+            {activeFilter.charAt(0).toUpperCase() + activeFilter.slice(1)}
+          </Text>
+        </View>
       </View>
-
+  
       <TextInput
         style={styles.searchInput}
         placeholder="Buscar en el feed..."
         placeholderTextColor="#9CA3AF"
         value={searchText}
-        onChangeText={text => setSearchText(text)}
+        onChangeText={(text) => setSearchText(text)}
       />
-
+  
       <FlatList
         data={filteredFeed}
-        renderItem={renderFeedItem}
+        renderItem={({ item }) => <FeedItem item={item} />}
         keyExtractor={(item, index) => item.id || index.toString()}
         contentContainerStyle={styles.feedContainer}
         refreshControl={
@@ -156,6 +119,7 @@ const Feed = () => {
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -165,33 +129,39 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgb(250, 247, 240)',
     paddingVertical: 16,
     paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderBottomWidth: 1,
     borderBottomColor: '#B17457',
   },
   filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#B17457',
     paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    marginTop: 10,
+    paddingHorizontal: 19,
+    borderRadius: 20,
+    marginLeft: 15,
   },
   filterButtonText: {
-    color: 'rgb(250, 247, 240)',
+    color: '#FFF',
     fontWeight: 'bold',
     fontSize: 14,
-    textAlign: 'center',
+    marginLeft: 5,
   },
   filterIndicator: {
-    color: '#B17457',
-    fontSize: 14,
-    marginTop: 5,
-    textAlign: 'center',
+    backgroundColor: '#FFF5E5',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#B17457',
   },
-  headerTitle: {
-    fontSize: 24,
+  filterIndicatorText: {
+    color: '#B17457',
     fontWeight: 'bold',
-    color: '#503C3C',
-    textAlign: 'center',
+    fontSize: 14,
   },
   searchInput: {
     backgroundColor: 'rgb(250, 247, 240)',
@@ -211,61 +181,6 @@ const styles = StyleSheet.create({
   },
   feedContainer: {
     padding: 16,
-  },
-  post: {
-    backgroundColor: 'rgb(250, 247, 240)',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#B17457',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#B17457',
-    marginBottom: 8,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  userName: {
-    color: '#B17457',
-    marginLeft: 4,
-    fontSize: 14,
-  },
-  image: {
-    width: '100%',
-    height: 200,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  description: {
-    color: '#B17457',
-    marginBottom: 8,
-    fontSize: 16,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  rating: {
-    color: '#B17457',
-    fontWeight: 'bold',
-    marginLeft: 4,
-    fontSize: 16,
-  },
-  dateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  date: {
-    color: '#B17457',
-    marginLeft: 4,
-    fontSize: 12,
   },
 });
 
