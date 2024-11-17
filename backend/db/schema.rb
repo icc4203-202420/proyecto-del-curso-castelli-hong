@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_11_05_021536) do
+ActiveRecord::Schema[7.1].define(version: 2024_11_17_201833) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -151,6 +151,13 @@ ActiveRecord::Schema[7.1].define(version: 2024_11_05_021536) do
     t.index ["bar_id"], name: "index_events_on_bar_id"
   end
 
+  create_table "feed_presences", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_feed_presences_on_user_id"
+  end
+
   create_table "friendships", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "friend_id", null: false
@@ -225,6 +232,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_11_05_021536) do
   add_foreign_key "event_pictures", "events"
   add_foreign_key "event_pictures", "users"
   add_foreign_key "events", "bars"
+  add_foreign_key "feed_presences", "users"
   add_foreign_key "friendships", "bars"
   add_foreign_key "friendships", "events"
   add_foreign_key "friendships", "users"

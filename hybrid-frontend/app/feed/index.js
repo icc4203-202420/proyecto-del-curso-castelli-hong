@@ -17,6 +17,7 @@ const Feed = () => {
     try {
       const token = await SecureStore.getItemAsync('authToken');
       const userId = await SecureStore.getItemAsync('USER_ID');
+      console.log("FEED/INDEX TOKEN: ", token)
       if (token && userId) {
         const response = await fetch(`${NGROK_URL}/api/v1/feed?user_id=${userId}`, {
           method: 'GET',
