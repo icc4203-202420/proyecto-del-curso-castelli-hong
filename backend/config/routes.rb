@@ -56,7 +56,7 @@ Rails.application.routes.draw do
         end
         post :push_token, on: :member
       end
-
+      get 'feed', to: 'feed_presences#index'
       resources :reviews, only: [:index, :show, :create, :update, :destroy]
     end
   end

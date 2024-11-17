@@ -1,180 +1,275 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Image, StyleSheet } from 'react-native';
-import { Button, Card, Icon, Input } from '@rneui/themed';
-import axios from 'axios';
-import * as SecureStore from 'expo-secure-store'; // Para manejar authToken
-import io from 'socket.io-client'; // Usar socket.io
-<<<<<<< HEAD
-import BackButton from '../components/BackButton';
-=======
-import { useNavigation } from '@react-navigation/native'; // Para manejar navegación
+import * as SecureStore from 'expo-secure-store';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'expo-router';
+import { View, Text, StyleSheet, ActivityIndicator, Image, TouchableOpacity, FlatList, TextInput, RefreshControl } from 'react-native';
+import { Icon } from '@rneui/themed';
+import { NGROK_URL } from '@env';
 
->>>>>>> origin/entrega-2.3
 const Feed = () => {
-  const [posts, setPosts] = useState([]);
-  const [filter, setFilter] = useState({ type: null, value: null });
-  const [error, setError] = useState('');
-  const [authToken, setAuthToken] = useState(null);
-  const socket = io('ws://localhost:3001'); // Establecer la conexión al servidor WebSocket
-  const navigation = useNavigation(); // Hook para manejar navegación
+  const [feed, setFeed] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const router = useRouter();
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [searchText, setSearchText] = useState('');
 
-  useEffect(() => {
-    // Obtener authToken desde SecureStore
-    const fetchAuthToken = async () => {
-      try {
-        const token = await SecureStore.getItemAsync('authToken');
-        if (!token) {
-          throw new Error('No se encontró authToken.');
-        }
-        setAuthToken(token);
-      } catch (err) {
-        setError('Error al obtener el token de autenticación.');
-      }
-    };
-
-    fetchAuthToken();
-  }, []);
-
-  useEffect(() => {
-    if (!authToken) return;
-
-    // Cargar publicaciones iniciales del feed
-    const fetchPosts = async () => {
-      try {
-        const response = await axios.get(`/v1/feed`, {
-          headers: { Authorization: `Bearer ${authToken}` },
+  const fetchFeed = async () => {
+    try {
+      const token = await SecureStore.getItemAsync('authToken');
+      const userId = await SecureStore.getItemAsync('USER_ID');
+      if (token && userId) {
+        const response = await fetch(`${NGROK_URL}/api/v1/feed?user_id=${userId}`, {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` },
         });
-        setPosts(response.data);
-      } catch (err) {
-        setError('Error al cargar las publicaciones.');
-      }
-    };
 
-    fetchPosts();
-
-    // Configurar la conexión WebSocket para recibir actualizaciones en tiempo real
-    socket.on('connect', () => {
-      console.log('Conectado al FeedChannel.');
-    });
-
-    socket.on('received', (data) => {
-      if (filter.type && filter.value) {
-        // Aplicar filtro a las publicaciones en tiempo real
-        if (data.post[filter.type] === filter.value) {
-          setPosts((prevPosts) => [data.post, ...prevPosts]);
+        if (response.ok) {
+          const data = await response.json();
+          setFeed(data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+        } else {
+          console.error('Error fetching feed');
         }
-      } else {
-        setPosts((prevPosts) => [data.post, ...prevPosts]);
       }
-    });
-
-    // Limpiar la conexión WebSocket al desmontar el componente
-    return () => {
-      socket.off('received');
-      socket.disconnect();
-    };
-  }, [authToken, filter]);
-
-  const handleFilterChange = (type, value) => {
-    if (value === '') {
-      setFilter({ type: null, value: null });
-    } else {
-      setFilter({ type, value });
+    } catch (error) {
+      console.error('Error fetching feed:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
+  useEffect(() => {
+    fetchFeed();
+  }, []);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    fetchFeed();
+  }, []);
+
+  const toggleFilter = () => {
+    const filters = ['all', 'friendship', 'bar', 'beer'];
+    const currentIndex = filters.indexOf(activeFilter);
+    const nextFilter = filters[(currentIndex + 1) % filters.length];
+    setActiveFilter(nextFilter);
+  };
+
+  const filteredFeed = feed.filter(item => {
+    const matchesType =
+      activeFilter === 'all' ||
+      (activeFilter === 'friendship' && true) ||
+      (activeFilter === 'bar' && item.bar_name?.toLowerCase().includes(searchText.toLowerCase())) ||
+      (activeFilter === 'beer' && item.type === 'beer_review');
+      
+    const matchesSearchText =
+      item.description?.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.event_name?.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.beer_name?.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.user_name?.toLowerCase().includes(searchText.toLowerCase());
+
+    return matchesType && matchesSearchText;
+  });
+
+  const renderFeedItem = ({ item }) => {
+    const formattedDate = new Date(item.created_at).toLocaleString();
+
+    return (
+      <View style={styles.post}>
+        {item.type === 'event_picture' && (
+          <TouchableOpacity onPress={() => router.push(`/events/${item.event_id}`)}>
+            <Text style={styles.title}>{item.event_name || 'Unnamed Event'}</Text>
+            <View style={styles.userInfo}>
+              <Icon name="user" type="feather" size={16} color="#9CA3AF" />
+              <Text style={styles.userName}>{item.user_handle}</Text>
+            </View>
+            {item.image_url && <Image source={{ uri: item.image_url }} style={styles.image} />}
+            <Text style={styles.description}>{item.description}</Text>
+            <View style={styles.dateContainer}>
+              <Icon name="calendar" type="feather" size={16} color="#9CA3AF" />
+              <Text style={styles.date}>{formattedDate}</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {item.type === 'beer_review' && (
+          <TouchableOpacity onPress={() => router.push(`/beers/${item.beer_id}`)}>
+            <Text style={styles.title}>{item.beer_name || 'Unnamed Beer'}</Text>
+            <View style={styles.userInfo}>
+              <Icon name="user" type="feather" size={16} color="#9CA3AF" />
+              <Text style={styles.userName}>{item.user_name}</Text>
+            </View>
+            <View style={styles.ratingContainer}>
+              <Icon name="star" type="feather" size={16} color="#FFA500" />
+              <Text style={styles.rating}>{item.rating}</Text>
+            </View>
+            <Text style={styles.description}>{item.review_text}</Text>
+            <View style={styles.dateContainer}>
+              <Icon name="clock" type="feather" size={16} color="#9CA3AF" />
+              <Text style={styles.date}>{formattedDate}</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FFA500" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {/* Botón de "Atrás" */}
-      <Button
-        title="Atrás"
-        onPress={() => router.back()}
-        icon={<Icon name="arrow-left" type="font-awesome" color="white" />}
-        buttonStyle={styles.backButton}
+      <View style={styles.header}>
+        {/* Back Button */}
+        <TouchableOpacity onPress={() => router.push('/')} style={styles.backButton}>
+          <Icon name="arrow-left" type="feather" size={24} color="#B17457" />
+        </TouchableOpacity>
+        
+        <Text style={styles.headerTitle}>Feed</Text>
+        <TouchableOpacity onPress={() => toggleFilter()} style={styles.filterButton}>
+          <Text style={styles.filterButtonText}>Filtrar</Text>
+        </TouchableOpacity>
+        <Text style={styles.filterIndicator}>
+          Filtro activo: {activeFilter.charAt(0).toUpperCase() + activeFilter.slice(1)}
+        </Text>
+      </View>
+
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Buscar en el feed..."
+        placeholderTextColor="#9CA3AF"
+        value={searchText}
+        onChangeText={text => setSearchText(text)}
       />
 
-      <Text style={styles.title}>Feed: Actividad en tiempo real</Text>
-
-      {/* Filtro de publicaciones */}
-      <Input
-        placeholder="Filtrar por tipo (friend, bar, country, beer)"
-        onChangeText={(value) => handleFilterChange('type', value)}
-        containerStyle={styles.input}
-      />
-      <Input
-        placeholder="Especifica el valor para filtrar"
-        onChangeText={(value) => handleFilterChange(filter.type, value)}
-        containerStyle={styles.input}
-      />
-
-      {/* Publicaciones */}
       <FlatList
-        data={posts}
-        keyExtractor={(post) => post.id.toString()}
-        renderItem={({ item: post }) => (
-          <Card containerStyle={styles.card}>
-            <Card.Title>{post.author.nickname} publicó:</Card.Title>
-            <Card.Divider />
-            <Text>{post.content}</Text>
-            {post.image && (
-              <Image
-                source={{ uri: post.image }}
-                style={styles.image}
-                resizeMode="cover"
-              />
-            )}
-            <Button
-              title="Ver más"
-              onPress={() => navigation.navigate('EventDetails', { id: post.event_id })}
-              icon={<Icon name="arrow-right" type="font-awesome" color="white" />}
-              buttonStyle={styles.button}
-            />
-          </Card>
-        )}
+        data={filteredFeed}
+        renderItem={renderFeedItem}
+        keyExtractor={(item, index) => item.id || index.toString()}
+        contentContainerStyle={styles.feedContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FFA500" />
+        }
       />
-
-      {error && <Text style={styles.error}>{error}</Text>}
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
+    backgroundColor: 'rgb(250, 247, 240)',
+  },
+  header: {
+    backgroundColor: 'rgb(250, 247, 240)',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#B17457',
+  },
+  filterButton: {
+    backgroundColor: '#B17457',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  filterButtonText: {
+    color: 'rgb(250, 247, 240)',
+    fontWeight: 'bold',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  filterIndicator: {
+    color: '#B17457',
+    fontSize: 14,
+    marginTop: 5,
+    textAlign: 'center',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#B17457',
+    textAlign: 'center',
+  },
+  searchInput: {
+    backgroundColor: 'rgb(250, 247, 240)',
+    color: '#B17457',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    margin: 16,
+    borderWidth: 1,
+    borderColor: '#B17457',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgb(250, 247, 240)',
+  },
+  feedContainer: {
+    padding: 16,
+  },
+  post: {
+    backgroundColor: 'rgb(250, 247, 240)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#B17457',
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
+    color: '#B17457',
+    marginBottom: 8,
   },
-  input: {
-    marginBottom: 10,
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  card: {
-    marginBottom: 10,
-    borderRadius: 10,
+  userName: {
+    color: '#B17457',
+    marginLeft: 4,
+    fontSize: 14,
   },
   image: {
     width: '100%',
     height: 200,
-    marginBottom: 10,
-    borderRadius: 10,
+    borderRadius: 8,
+    marginBottom: 8,
   },
-  button: {
-    backgroundColor: '#2089dc',
-    borderRadius: 10,
+  description: {
+    color: '#B17457',
+    marginBottom: 8,
+    fontSize: 16,
   },
-  backButton: {
-    backgroundColor: '#ff6347',
-    borderRadius: 10,
-    marginBottom: 10,
-    alignSelf: 'flex-start',
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  error: {
-    color: 'red',
-    marginTop: 10,
+  rating: {
+    color: '#B17457',
+    fontWeight: 'bold',
+    marginLeft: 4,
+    fontSize: 16,
+  },
+  dateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  date: {
+    color: '#B17457',
+    marginLeft: 4,
+    fontSize: 12,
   },
 });
+
 
 export default Feed;

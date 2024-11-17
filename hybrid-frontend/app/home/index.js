@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Alert } from 'react-native';
 import { Button } from '@rneui/themed';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import { Layout } from '../_layout';
 import { NGROK_URL } from '@env';
 
 const HomeScreen = () => {
@@ -45,7 +44,6 @@ const HomeScreen = () => {
   };
 
   return (
-    <Layout>
       <View style={styles.container}>
         {userFirstName ? (
           <Text style={styles.text}>Welcome, {userFirstName}!</Text> // Mostrar el nombre del usuario
@@ -94,7 +92,6 @@ const HomeScreen = () => {
           titleStyle={styles.logoutButtonTitle} // Estilo especial para el texto del botón de Logout
         />
       </View>
-    </Layout>
   );
 };
 
