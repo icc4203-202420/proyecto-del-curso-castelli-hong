@@ -127,7 +127,7 @@ const Feed = () => {
     <View style={styles.container}>
       <BackButton/>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Feed</Text>
+        {/* <Text style={styles.headerTitle}>Feed</Text> */}
         <TouchableOpacity onPress={() => toggleFilter()} style={styles.filterButton}>
           <Text style={styles.filterButtonText}>Filtrar</Text>
         </TouchableOpacity>
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   filterButton: {
     backgroundColor: '#B17457',
     paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 15,
     borderRadius: 8,
     marginTop: 10,
   },
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#B17457',
+    color: '#503C3C',
     textAlign: 'center',
   },
   searchInput: {

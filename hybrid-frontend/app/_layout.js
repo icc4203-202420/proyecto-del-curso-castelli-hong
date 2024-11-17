@@ -12,7 +12,7 @@ import NotificationListener from '../util/NotificationListener';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "rgb(250, 247, 240)",
+    backgroundColor: "#FAF7F0",
     justifyContent: "center",
   },
   title: {

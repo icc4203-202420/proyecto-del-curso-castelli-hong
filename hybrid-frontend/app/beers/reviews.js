@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import { NGROK_URL } from '@env';
 import { FontAwesome } from '@expo/vector-icons';
@@ -38,7 +38,7 @@ const Reviews = ({ beerId, beer }) => {
     const fetchReviews = async () => {
       dispatch({ type: 'LOADING' });
       try {
-        const token = await AsyncStorage.getItem('authToken');
+        const token = await SecureStore.getItemAsync('authToken');
         const response = await axios.get(`${NGROK_URL}/api/v1/beers/${beerId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -52,10 +52,20 @@ const Reviews = ({ beerId, beer }) => {
     fetchReviews();
   }, [beerId]);
 
+  // const formatDate = (dateString) => {
+  //   const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  //   return new Date(dateString).toLocaleDateString(undefined, options);
+  // };
   const formatDate = (dateString) => {
+    if (!dateString) return '' ;
+    const date = new Date(dateString);
+    if (isNaN(date)) {
+      return 'Invalid Date';
+    }
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
+    return date.toLocaleDateString(undefined, options);
   };
+  
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
@@ -80,8 +90,11 @@ const Reviews = ({ beerId, beer }) => {
         </View>
       </View>
       <Text style={styles.reviewText}>{item.text}</Text>
+      {/* Display the review date */}
+      <Text style={styles.reviewDate}>{formatDate(item.created_at)}</Text>
     </View>
   );
+  
 
   if (state.loading) {
     return <ActivityIndicator size="large" color="#0000ff" />;

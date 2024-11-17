@@ -78,7 +78,7 @@ const BeerSearchScreen = () => {
                   <Icon
                     name="right"
                     type="antdesign"
-                    color="#808080"
+                    color="#674636"
                     size={20}
                   />
                 </View>
@@ -101,13 +101,13 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   input: {
-    backgroundColor: '#A67B5B',
+    backgroundColor: '#D6C1AF',
     borderRadius: 8,
     height: 50,
     paddingHorizontal: 10,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#AAB396',
     borderRadius: 10,
     padding: 15,
     marginVertical: 8,
@@ -123,10 +123,11 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: "#674636"
   },
   cardSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: '#674636',
   },
   cardFooter: {
     flexDirection: 'row',

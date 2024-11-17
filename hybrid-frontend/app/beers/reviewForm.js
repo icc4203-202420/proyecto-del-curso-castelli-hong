@@ -1,9 +1,9 @@
 import { NGROK_URL } from '@env';
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator } from 'react-native';
-import { Slider } from '@rneui/themed'; 
+import { Slider } from '@rneui/themed';
 import { useRouter } from "expo-router";
-import AsyncStorage from '@react-native-async-storage/async-storage'; 
+import * as SecureStore from 'expo-secure-store';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
@@ -26,8 +26,8 @@ const BeerReviews = ({ beerId }) => {
   const router = useRouter();
   
   const handleSubmit = async (values, { setSubmitting }) => {
-    const userId = await AsyncStorage.getItem('USER_ID');
-    const token = await AsyncStorage.getItem('authToken');
+    const userId = await SecureStore.getItemAsync('USER_ID');
+    const token = await SecureStore.getItemAsync('authToken');
 
     console.log("TOKEN:", token);
     console.log("USER ID:", userId);
@@ -91,14 +91,14 @@ const BeerReviews = ({ beerId }) => {
         <View contentContainerStyle={styles.container}>
           <Text style={styles.label}>Calificación (1-5): {rating.toFixed(1)}</Text>
           <Slider
-            value={rating}
-            onValueChange={(value) => setRating(parseFloat(value.toFixed(1)))}
-            minimumValue={1}
-            maximumValue={5}
-            step={0.1}
-            thumbTintColor="#007bff"
-            minimumTrackTintColor="#007bff"
-            maximumTrackTintColor="#ccc"
+            value={rating * 10}
+            onValueChange={(value) => setRating(value / 10)} 
+            minimumValue={10}  // Los valores se multiplican por 10
+            maximumValue={50}  // Los valores se multiplican por 10
+            step={1}  // Usamos pasos enteros
+            thumbTintColor="#4E342E"
+            minimumTrackTintColor="#6D4C41"
+            maximumTrackTintColor="#D7CCC8"
             trackStyle={styles.sliderTrack}
             thumbStyle={styles.sliderThumb}
           />
@@ -111,13 +111,13 @@ const BeerReviews = ({ beerId }) => {
             value={values.text}
             onChangeText={handleChange('text')}
             placeholder="Escribe tu reseña aquí..."
-            placeholderTextColor="#aaa"
+            placeholderTextColor="#8D6E63"
           />
           {touched.text && errors.text && <Text style={styles.error}>{errors.text}</Text>}
           {isSubmitting ? (
-            <ActivityIndicator size="large" color="#007bff" />
+            <ActivityIndicator size="large" color="#6D4C41" />
           ) : (
-            <Button title="Enviar evaluación" onPress={handleSubmit} />
+            <Button title="Enviar evaluación" onPress={handleSubmit} color="#AAB396" />
           )}
           {serverError ? (
             <Text style={styles.error}>{serverError}</Text>
@@ -131,32 +131,40 @@ const BeerReviews = ({ beerId }) => {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    padding: 10
+    padding: 20,
+    backgroundColor: '#F5F3E7',
   },
   label: {
     fontSize: 16,
-    color: 'black',
+    color: '#674636', // Dark brown
     marginBottom: 8,
+    fontWeight: 'bold',
   },
   sliderTrack: {
-    height: 15
+    height: 12,
+    borderRadius: 6,
   },
   sliderThumb: {
-    height: 20,
-    width: 20,
-    backgroundColor: '#007bff',
+    height: 24,
+    width: 24,
+    backgroundColor: '#AAB396', // Dark brown for thumb
+    borderRadius: 12,
   },
   textArea: {
-    borderColor: '#ccc',
+    borderColor: '#BE9E84',
     borderWidth: 1,
-    padding: 8,
-    marginBottom: 10,
-    borderRadius: 5,
+    padding: 10,
+    marginBottom: 12,
+    borderRadius: 8,
     textAlignVertical: 'top',
     width: '100%',
+    backgroundColor: '#fff', // Light beige background
+  },
+  inputError: {
+    borderColor: '#D32F2F', // Red error border
   },
   error: {
-    color: 'red',
+    color: '#D32F2F', // Red color for errors
     marginBottom: 10,
   },
 });

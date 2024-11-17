@@ -124,14 +124,16 @@ const SharePhoto = ({ eventId, eventName }) => {
         <Text style={styles.eventTitle}>{eventName}</Text>
       </View>
 
-      {/* Mostrar un contenedor gris si no hay imagen */}
-      {!imageUri ? (
-        <View style={styles.imagePlaceholder}>
-          <Text style={styles.placeholderText}>Selecciona una imagen</Text>
-        </View>
-      ) : (
-        <Image source={{ uri: imageUri }} style={styles.image} />
-      )}
+      {/* Hacer clic en el placeholder también abre el selector de imagen */}
+      <TouchableOpacity onPress={pickImage}>
+        {!imageUri ? (
+          <View style={styles.imagePlaceholder}>
+            <Text style={styles.placeholderText}>Selecciona una imagen</Text>
+          </View>
+        ) : (
+          <Image source={{ uri: imageUri }} style={styles.image} />
+        )}
+      </TouchableOpacity>
 
       <TouchableOpacity onPress={pickImage} style={styles.imagePickerButton}>
         <Text style={styles.imagePickerText}>Seleccionar imagen</Text>
