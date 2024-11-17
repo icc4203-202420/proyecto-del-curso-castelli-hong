@@ -52,7 +52,7 @@ const Feed = () => {
           JSON.stringify({
             command: 'subscribe',
             identifier: JSON.stringify({
-              channel: 'Channel',
+              channel: 'FeedChannel',
               user_id: userId, 
             }),
           })
