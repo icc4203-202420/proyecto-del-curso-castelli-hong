@@ -42,7 +42,15 @@ class API::V1::UsersController < ApplicationController
     if @user.nil?
       render json: { error: "User not found" }, status: :not_found
     else
-      render json: @user.as_json(only: [:id, :first_name, :last_name, :email, :handle]), status: :ok
+      render json: @user.as_json(
+        only: [:id, :first_name, :last_name, :email, :handle],
+        include: {
+          address: {
+            only: [],
+            methods: :country_name
+          }
+        }
+      ), status: :ok
     end
   end
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, Text, ActivityIndicator, StyleSheet, Alert } from 'react-native';
-import { Input, Button, Icon } from '@rneui/themed';
+import { View, FlatList, Text, ActivityIndicator, StyleSheet, Alert, TextInput } from 'react-native';
+import { Button, Icon } from '@rneui/themed';
 import axios from 'axios';
 import { NGROK_URL } from '@env';
 import * as SecureStore from 'expo-secure-store';
@@ -79,14 +79,6 @@ const UserSearchScreen = () => {
         },
       });
 
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Solicitud de Amistad',
-          body: 'Has enviado una solicitud de amistad.',
-        },
-        trigger: null,
-      });
-
       Alert.alert('Éxito', 'Solicitud de amistad enviada.');
     } catch (error) {
       console.error('Error al agregar amigo:', error);
@@ -97,49 +89,46 @@ const UserSearchScreen = () => {
   };
 
   return (
-      <View style={styles.container}>
-        <BackButton/>
-        <Input
-          placeholder="Buscar"
-          value={searchText}
-          onChangeText={setSearchText}
-          containerStyle={styles.inputContainer}
-          inputContainerStyle={styles.input}
-          leftIcon={<Icon name="search" color="#6F4E37" />}
-          placeholderTextColor="#6F4E37"
-        />
-        {loading ? (
-          <ActivityIndicator size="small" color="#000" />
-        ) : (
-          <FlatList
-            data={filteredUsers}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.card}>
-                <View style={styles.cardContent}>
-                  <View style={styles.userInfo}>
-                    <Text style={styles.handleText}>{item.handle}</Text>
-                    <Text style={styles.nameText}>{`${item.first_name} ${item.last_name}`}</Text>
-                  </View>
-                  <Button 
-                    title="" 
-                    onPress={() => handleAddFriend(item.id)} 
-                    icon={<Icon name="person-add" color="#ffffff" />}
-                    buttonStyle={styles.addButton}
-                  />
+    <View style={styles.container}>
+      <BackButton />
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Buscar usuarios..."
+        placeholderTextColor="#9CA3AF"
+        value={searchText}
+        onChangeText={setSearchText}
+      />
+      {loading ? (
+        <ActivityIndicator size="large" color="#6F4E37" />
+      ) : (
+        <FlatList
+          data={filteredUsers}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <View style={styles.card}>
+              <View style={styles.cardContent}>
+                <View style={styles.userInfo}>
+                  <Text style={styles.handleText}>{item.handle}</Text>
+                  <Text style={styles.nameText}>{`${item.first_name} ${item.last_name}`}</Text>
                 </View>
+                <Button
+                  onPress={() => handleAddFriend(item.id)}
+                  icon={<Icon name="person-add" color="#ffffff" />}
+                  buttonStyle={styles.addButton}
+                />
               </View>
-            )}
-            ListEmptyComponent={<Text style={styles.emptyText}>No se encontraron usuarios.</Text>}
-          />
-        )}
-        <EventModal 
-          visible={modalVisible} 
-          onClose={() => setModalVisible(false)} 
-          onSubmit={handleModalSubmit}
-          friendId={selectedFriendId}
+            </View>
+          )}
+          ListEmptyComponent={<Text style={styles.emptyText}>No se encontraron usuarios.</Text>}
         />
-      </View>
+      )}
+      <EventModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onSubmit={handleModalSubmit}
+        friendId={selectedFriendId}
+      />
+    </View>
   );
 };
 
@@ -148,32 +137,33 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
   },
-  inputContainer: {
-    marginBottom: 5,
-    marginTop: 40,
-  },
-  input: {
-    backgroundColor: '#A67B5B',
-    borderRadius: 8,
-    height: 50,
-    paddingHorizontal: 10,
+  searchInput: {
+    backgroundColor: '#FFFFFF',
+    color: '#333',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 20,
+    margin: 16,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    elevation: 2,
   },
   emptyText: {
     textAlign: 'center',
     marginTop: 20,
-    color: 'gray',
+    color: '#9CA3AF',
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
+    backgroundColor: '#F0EDE0',
+    borderRadius: 12,
+    padding: 16,
     marginVertical: 8,
-    marginHorizontal: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 5,
+    marginHorizontal: 16,
+    // shadowColor: '#000',
+    // shadowOffset: { width: 0, height: 4 },
+    // shadowOpacity: 0.1,
+    // shadowRadius: 8,
+    // elevation: 3,
   },
   cardContent: {
     flexDirection: 'row',
@@ -181,21 +171,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
   },
   handleText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginRight: 5,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
   },
   nameText: {
-    fontSize: 16,
-    color: '#666',
-    opacity: 0.6,
+    fontSize: 13,
+    color: '#6B7280',
   },
   addButton: {
-    backgroundColor: '#B17457',
+    backgroundColor: '#A9B388',
+    borderRadius: 8,
   },
 });
 

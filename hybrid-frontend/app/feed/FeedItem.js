@@ -14,7 +14,7 @@ const FeedItem = ({ item }) => {
           <Text style={styles.title}>{item.event_name || 'Unnamed Event'}</Text>
           <View style={styles.userInfo}>
             <Icon name="user" type="feather" size={16} color="#B17457" />
-            <Text style={styles.userName}>{item.user_handle}</Text>
+            <Text style={styles.userName}>{item.user_name}</Text>
           </View>
           {item.image_url && <Image source={{ uri: item.image_url }} style={styles.image} />}
           <Text style={styles.description}>{item.description}</Text>

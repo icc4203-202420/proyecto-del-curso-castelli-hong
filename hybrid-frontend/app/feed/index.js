@@ -135,7 +135,7 @@ const Feed = () => {
   
       <TextInput
         style={styles.searchInput}
-        placeholder="Buscar en el feed..."
+        placeholder="Buscar..."
         placeholderTextColor="#9CA3AF"
         value={searchText}
         onChangeText={(text) => setSearchText(text)}

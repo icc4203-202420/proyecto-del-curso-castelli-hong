@@ -139,10 +139,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: '100%',
     alignSelf: 'center',
-    shadowColor: '#674636',
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
+    // shadowColor: '#674636',
+    // shadowOffset: { width: 2, height: 2 },
+    // shadowOpacity: 0.2,
+    // shadowRadius: 5,
+    borderWidth: 0, // Sin borde
+    elevation: 0, // Sin sombra en Android
+    shadowColor: 'transparent', // Sin sombra en iOS
   },
   cardTitle: {
     fontSize: 19,
