@@ -114,8 +114,8 @@ class API::V1::FriendshipsController < ApplicationController
         render json: @friendship, status: :created
       else
         Rails.logger.error "No push token found for friend: #{@friend.id}"
-        render json: { error: 'Friend does not have a push token' }, status: :unprocessable_entity
       end
+      render json: @friendship, status: :created
     else
       # Debug: Log the errors if the friendship save fails
       Rails.logger.error "Failed to save friendship: #{@friendship.errors.full_messages.inspect}"

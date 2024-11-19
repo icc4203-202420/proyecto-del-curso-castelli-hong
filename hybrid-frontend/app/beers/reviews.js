@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image } from 'reac
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import { NGROK_URL } from '@env';
-// import { Rating } from 'react-native-ratings';
 import { Rating } from '@kolking/react-native-rating';
 
 const initialState = {
@@ -72,11 +71,12 @@ const Reviews = ({ beerId, beer }) => {
   const renderReviewItem = ({ item }) => (
     <View style={styles.reviewContainer}>
       <View style={styles.userInfo}>
-        {/* Avatar Image */}
-        <Image
-          source={{ uri: item.user.avatarUrl || 'https://www.example.com/default-avatar.png' }} // Placeholder URL
-          style={styles.avatar}
-        />
+        {/* Avatar with initial */}
+        <View style={[styles.avatar]}>
+          <Text style={styles.avatarText}>
+            {item.user.handle ? item.user.handle[0].toUpperCase() : '?'}
+          </Text>
+        </View>
         <Text style={styles.userHandle}>{item.user.handle}</Text>
         <View style={styles.ratingContainer}>
           <Rating
@@ -135,15 +135,22 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   avatar: {
-    width: 40,
-    height: 40,
+    width: 30,
+    height: 30,
     borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 10,
-    backgroundColor: '#DFD6C1',
+    backgroundColor: "#5F6F52",
+  },
+  avatarText: {
+    color: 'white',
+    fontSize: 14,
+    // fontWeight: 'bold',
   },
   userHandle: {
     fontSize: 16,
-    color: 'B17457',
+    color: '#B17457',
     marginLeft: 5,
   },
   ratingContainer: {

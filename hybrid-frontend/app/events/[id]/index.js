@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Modal, View, Text, TouchableOpacity, ActivityIndicator, Image, FlatList, StyleSheet, Alert } from 'react-native';
+import { Modal, ScrollView, View, Text, TouchableOpacity, ActivityIndicator, Image, FlatList, StyleSheet, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
@@ -125,7 +125,7 @@ const EventsShow = () => {
   const isEventPast = new Date(event.date) < new Date();
 
   return (
-    <View style={styles.scrollContainer}>
+    <ScrollView style={styles.scrollContainer}>
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <MaterialIcons name="arrow-back" size={24} color="#333" />
       </TouchableOpacity>
@@ -240,7 +240,7 @@ const EventsShow = () => {
         />
       </Modal>
 
-    </View>
+    </ScrollView>
   );
 };
 
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   addPhotoText: { fontSize: 24, color: '#A67B5B', marginLeft: 8 },
   loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   eventImage: { width: '100%', height: 0, paddingBottom: '100%', borderRadius: 16, marginVertical: 10 },
-  generateVideoButton: { backgroundColor: '#A67B5B', padding: 10, borderRadius: 5, marginTop: 20, alignItems: 'center' },
+  generateVideoButton: { backgroundColor: '#A67B5B', padding: 10, borderRadius: 5, marginTop: 20, alignItems: 'center', marginBottom: 25 },
   generateVideoText: { color: 'white', fontWeight: 'bold' },
   video: { width: '100%', height: 300, marginTop: 20 },
   attendeesContainer: { marginTop: 10 },
