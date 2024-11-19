@@ -110,7 +110,7 @@ const BeerReviews = ({ beerId }) => {
             numberOfLines={4}
             value={values.text}
             onChangeText={handleChange('text')}
-            placeholder="Escribe tu reseña aquí..."
+            placeholder="Write your review..."
             placeholderTextColor="#8D6E63"
           />
           {touched.text && errors.text && <Text style={styles.error}>{errors.text}</Text>}
