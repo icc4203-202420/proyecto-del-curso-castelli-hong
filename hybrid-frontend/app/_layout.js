@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     color: "rgb(74, 73, 71)",
   },
   inputContainer: {
-    borderBottomColor: "rgb(177, 116, 87)",
+    // borderBottomColor: "rgb(177, 116, 87)",
   },
   error: {
     color: "red",

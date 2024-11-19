@@ -17,12 +17,9 @@ const EventsShow = () => {
   const [videoGenerating, setVideoGenerating] = useState(false); // Estado para el modal de carga de video
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const [showAttendeesModal, setShowAttendeesModal] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [selectedEventName, setSelectedEventName] = useState('');
-
-  const closeAttendeesModal = () => setShowAttendeesModal(false);
 
   const fetchEventData = useCallback(async () => {
     try {
@@ -221,35 +218,13 @@ const EventsShow = () => {
 
       {/* Modal de carga para la generación del video */}
       <Modal
-        visible={videoGenerating || showAttendeesModal}
+        visible={videoGenerating}
         onRequestClose={() => {
           setVideoGenerating(false);
-          setShowAttendeesModal(false);
         }}
         animationType="slide"
         transparent={true}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>Event Attendees</Text>
-              <FlatList
-                data={users}
-                renderItem={({ item }) => (
-                  <View style={styles.attendeeCard}>
-                    <View style={styles.attendeeAvatar}>
-                      <Text style={styles.avatarText}>{item.first_name ? item.first_name[0] : ''}</Text>
-                    </View>
-                    <Text style={styles.attendeeName}>{item.first_name} {item.last_name}</Text>
-                    <Text style={styles.attendeeHandle}>{item.handle}</Text>
-                  </View>
-                )}
-                keyExtractor={(user) => user.id.toString()}
-              />
-              <TouchableOpacity style={styles.closeModalButton} onPress={closeAttendeesModal}>
-                <Text style={styles.closeModalText}>Close</Text>
-              </TouchableOpacity>
-            </View>
-        </View>
       </Modal>
 
       <Modal
@@ -295,13 +270,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#F6F0E3', 
     borderRadius: 8, 
     padding: 10, 
-    marginVertical: 8, 
-    marginHorizontal: 10, 
-    elevation: 3, 
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 2 }, 
-    shadowOpacity: 0.1, 
-    shadowRadius: 4 
+    marginVertical: 2, 
+    // marginHorizontal: 10, 
+    // elevation: 3, 
+    // shadowColor: '#000', 
+    // shadowOffset: { width: 0, height: 2 }, 
+    // shadowOpacity: 0.1, 
+    // shadowRadius: 4 
   },
   avatarText: { color: 'white', fontWeight: 'bold' },
   attendeeName: { fontSize: 16, fontWeight: 'bold', marginBottom: 4, color: '#503C3C' },
