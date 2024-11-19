@@ -44,6 +44,13 @@ class API::V1::FeedController < ApplicationController
                                      .or(EventPicture.where(event_id: bar_event_ids))
                                      .order(created_at: :desc)
 
+        if params[:country].present?
+          event_pictures = event_pictures.joins(user: { address: :country })
+                                .where("countries.name = ?", params[:country])
+          
+        end
+
+
         # Obtener reseñas de cervezas de amigos y bares
         reviews = Review.includes(:user, :beer)
                         .where(user_id: friend_ids)
@@ -77,7 +84,7 @@ class API::V1::FeedController < ApplicationController
           })
         end
 
-        # Ordenar el feed por fecha de creación
+        # Ordenar por fecha de creación
         feed.sort_by! { |post| post[:created_at] }.reverse!
 
         render json: feed

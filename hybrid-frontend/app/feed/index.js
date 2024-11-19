@@ -13,14 +13,23 @@ const Feed = () => {
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchText, setSearchText] = useState('');
+  const [country, setCountry] = useState('');
 
   const fetchFeed = async () => {
     try {
       const token = await SecureStore.getItemAsync('authToken');
       const userId = await SecureStore.getItemAsync('USER_ID');
       console.log("FEED/INDEX TOKEN: ", token)
+
       if (token && userId) {
-        const response = await fetch(`${NGROK_URL}/api/v1/feed?user_id=${userId}`, {
+        const url = new URL(`${NGROK_URL}/api/v1/feed`);
+        url.searchParams.append('user_id', userId);
+
+        if (country) {
+          url.searchParams.append('country', country); // Agregar filtro de país
+        }
+
+        const response = await fetch(url.toString(), {
           method: 'GET',
           headers: { Authorization: `${token}` },
         });
@@ -40,6 +49,10 @@ const Feed = () => {
       setRefreshing(false);
     }
   };
+
+  useEffect(() => {
+    fetchFeed();
+  }, [country]);
 
   useEffect(() => {
     const initializeFeedAndSocket = async () => {
@@ -140,6 +153,14 @@ const Feed = () => {
         value={searchText}
         onChangeText={(text) => setSearchText(text)}
       />
+
+      <TextInput
+        style={styles.countryInput}
+        placeholder="Filtrar por país (ej: USA)..."
+        placeholderTextColor="#9CA3AF"
+        value={country}
+        onChangeText={(text) => setCountry(text)}
+      />
   
       <FlatList
         data={filteredFeed}
@@ -158,6 +179,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'rgb(250, 247, 240)',
+  },
+  countryInput: {
+    backgroundColor: '#FFF',
+    color: '#333',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    marginHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   header: {
     backgroundColor: 'rgb(250, 247, 240)',
