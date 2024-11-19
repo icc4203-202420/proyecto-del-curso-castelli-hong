@@ -4,7 +4,7 @@ class API::V1::EventsController < ApplicationController
     include Rails.application.routes.url_helpers
     respond_to :json
     before_action :set_bar, only: [:index, :create]
-    before_action :set_event, only: [:show, :update, :destroy, :attendees, :pictures]
+    before_action :set_event, only: [:show, :update, :destroy, :attendees, :pictures, :fetch_video]
     before_action :verify_jwt_token, only: [:create, :update, :destroy]
 
     def check_in
@@ -87,7 +87,17 @@ class API::V1::EventsController < ApplicationController
       # Render the JSON response with event data and images
       render json: event_data, status: :ok
     end
-    
+
+    def fetch_video
+      if @event.video.attached?
+        # Send the attached video file
+        send_data @event.video.download, type: @event.video.content_type, disposition: 'inline'
+      else
+        # Enqueue the job to generate the video
+        GenerateVideoJob.perform_later(@event)
+        render json: { error: 'Video not available. Video generation has been started.' }, status: :not_found
+      end
+    end
 
     def generate_video
       event = Event.find(params[:id])

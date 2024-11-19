@@ -6,6 +6,7 @@ class Event < ApplicationRecord
 
   has_one_attached :flyer
   has_one_attached :video_url
+  has_one_attached :video
 
   def thumbnail
     return nil unless flyer.attached?

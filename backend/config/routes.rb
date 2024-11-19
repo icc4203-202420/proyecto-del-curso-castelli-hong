@@ -39,6 +39,7 @@ Rails.application.routes.draw do
         member do
           get :pictures
           post :generate_video
+          get :fetch_video
           resource :attendances, only: [:show, :create, :destroy]
         end
 

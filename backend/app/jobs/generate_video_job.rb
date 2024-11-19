@@ -7,8 +7,11 @@ class GenerateVideoJob < ApplicationJob
     video_path = video_dir.join("event_#{event.id}.mp4")
 
     FileUtils.mkdir_p(video_dir) unless Dir.exist?(video_dir)
+    Rails.logger.debug("Video directory: #{video_dir}")
 
-    system("ffmpeg -framerate 1/3 -pattern_type glob -i '#{images_dir}/*.jpg' -c:v libx264 '#{video_path}'")
+
+    system("ffmpeg -framerate 1/3 -pattern_type glob -i '#{images_dir}/photo_*.jpg' -c:v libx264 '#{video_path}'")
+
     event.video_url.attach(io: File.open(video_path), filename: "event_#{event.id}.mp4", content_type: "video/mp4")
 
     event.save!

@@ -27,7 +27,7 @@ const EventsShow = () => {
 
       if (token) {
         const eventResponse = await axios.get(`${NGROK_URL}/api/v1/events/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `${token}` }
         });
         setEvent(eventResponse.data);
         setUsers(eventResponse.data.users);
@@ -49,6 +49,22 @@ const EventsShow = () => {
       }
     } catch (error) {
       console.error('Error fetching pictures:', error);
+    }
+  };
+  const handleFetchVideo = async (event_id) => {
+    try {
+      const response = await axios.get(`${NGROK_URL}/api/v1/events/${event_id}/fetch_video`, {
+        responseType: 'blob',
+      });
+      if (response.status === 200) {
+        const videoUri = URL.createObjectURL(response.data);
+        // navigation.navigate('VideoPlayer', { videoUri });
+      } else {
+        Alert.alert('Video not available');
+      }
+    } catch (error) {
+      console.error('Error fetching video:', error);
+      Alert.alert('Failed to load video. Please try again.');
     }
   };
 
@@ -200,12 +216,14 @@ const EventsShow = () => {
         keyExtractor={(item) => item.id.toString()}
       />
       {videoUrl && videoUrl.endsWith('.mp4') ? (
-        <Video
-          source={{ uri: videoUrl }}
-          style={styles.video}
-          useNativeControls
-          resizeMode="contain"
-        />
+        <TouchableOpacity>
+          <Video
+            source={{ uri: videoUrl }}
+            style={styles.video}
+            useNativeControls
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
       ) : (
         <TouchableOpacity 
           style={styles.generateVideoButton} 
@@ -215,6 +233,7 @@ const EventsShow = () => {
           <Text style={styles.generateVideoText}>Generate Summary Video</Text>
         </TouchableOpacity>
       )}
+
 
       {/* Modal de carga para la generación del video */}
       <Modal
@@ -245,7 +264,7 @@ const EventsShow = () => {
 };
 
 const styles = StyleSheet.create({
-  scrollContainer: { flex: 1, padding: 16, backgroundColor: 'rgb(250, 247, 240)' },
+  scrollContainer: { marginBottom: 50 , flex: 1, padding: 16, backgroundColor: 'rgb(250, 247, 240)' },
   eventTitle: { fontSize: 25, fontWeight: 'bold', marginVertical: 5, color: '#503C3C' },
   detailsContainer: { marginVertical: 16 },
   hostedBy: { fontSize: 16, color: '#503C3C' },
