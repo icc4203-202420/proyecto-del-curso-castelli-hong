@@ -1,10 +1,10 @@
 import React, { useEffect, useReducer } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import { NGROK_URL } from '@env';
-import { FontAwesome } from '@expo/vector-icons';
-import { Rating } from 'react-native-ratings';
+// import { Rating } from 'react-native-ratings';
+import { Rating } from '@kolking/react-native-rating';
 
 const initialState = {
   loading: true,
@@ -52,10 +52,6 @@ const Reviews = ({ beerId, beer }) => {
     fetchReviews();
   }, [beerId]);
 
-  // const formatDate = (dateString) => {
-  //   const options = { year: 'numeric', month: 'long', day: 'numeric' };
-  //   return new Date(dateString).toLocaleDateString(undefined, options);
-  // };
   const formatDate = (dateString) => {
     if (!dateString) return 'No date available';
     const date = new Date(dateString);
@@ -65,7 +61,6 @@ const Reviews = ({ beerId, beer }) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return date.toLocaleDateString(undefined, options);
   };
-  
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
@@ -77,24 +72,29 @@ const Reviews = ({ beerId, beer }) => {
   const renderReviewItem = ({ item }) => (
     <View style={styles.reviewContainer}>
       <View style={styles.userInfo}>
-        <FontAwesome name="user" size={24} color="black" />
+        {/* Avatar Image */}
+        <Image
+          source={{ uri: item.user.avatarUrl || 'https://www.example.com/default-avatar.png' }} // Placeholder URL
+          style={styles.avatar}
+        />
         <Text style={styles.userHandle}>{item.user.handle}</Text>
         <View style={styles.ratingContainer}>
           <Rating
-            startingValue={item.rating}
+            type="star"
+            rating={item.rating}
             readonly
-            imageSize={20}
-            style={styles.rating}
+            size={15}
+            disabled="true"
+            fillColor="#FF9500"
+            baseColor="#D1D1D6"
           />
           <Text style={styles.reviewRating}>{item.rating}</Text>
         </View>
       </View>
       <Text style={styles.reviewText}>{item.text}</Text>
-      {/* Display the review date */}
       <Text style={styles.reviewDate}>{formatDate(item.created_at)}</Text>
     </View>
   );
-  
 
   if (state.loading) {
     return <ActivityIndicator size="large" color="#0000ff" />;
@@ -108,6 +108,7 @@ const Reviews = ({ beerId, beer }) => {
       ListHeaderComponent={renderHeader}
       ListEmptyComponent={<Text style={styles.noReviews}>No hay evaluaciones.</Text>}
       contentContainerStyle={styles.container}
+      nestedScrollEnabled
     />
   );
 };
@@ -133,9 +134,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 5,
   },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+    backgroundColor: '#DFD6C1',
+  },
   userHandle: {
     fontSize: 16,
-    color: 'black',
+    color: 'B17457',
     marginLeft: 5,
   },
   ratingContainer: {
@@ -149,7 +157,7 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   reviewText: {
-    fontSize: 16,
+    fontSize: 14,
     color: 'gray',
   },
   noReviews: {
@@ -157,6 +165,10 @@ const styles = StyleSheet.create({
     color: 'gray',
     marginTop: 20,
     fontSize: 16,
+  },
+  reviewDate: {
+    color: '#B2AFA8',
+    marginTop: 15,
   },
   error: {
     color: 'red',

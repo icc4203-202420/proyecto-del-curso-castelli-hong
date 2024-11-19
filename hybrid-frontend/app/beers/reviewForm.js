@@ -89,7 +89,7 @@ const BeerReviews = ({ beerId }) => {
     >
       {({ handleChange, handleSubmit, values, errors, touched, isSubmitting }) => (
         <View contentContainerStyle={styles.container}>
-          <Text style={styles.label}>Calificación (1-5): {rating.toFixed(1)}</Text>
+          <Text style={styles.label}>Rating: {rating.toFixed(1)}</Text>
           <Slider
             value={rating * 10}
             onValueChange={(value) => setRating(value / 10)} 
@@ -103,7 +103,7 @@ const BeerReviews = ({ beerId }) => {
             thumbStyle={styles.sliderThumb}
           />
           {serverError.includes('calificación') && <Text style={styles.error}>{serverError}</Text>}
-          <Text style={styles.label}>Comentario:</Text>
+          <Text style={styles.label}>Comment:</Text>
           <TextInput
             style={[styles.textArea, serverError.includes('comentario') ? styles.inputError : null]}
             multiline

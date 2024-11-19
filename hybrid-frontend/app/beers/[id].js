@@ -150,12 +150,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 19,
     fontWeight: 'bold',
-    color: '#4B3C31',
+    color: '#B17457',
     marginBottom: 10,
   },
   detail: {
     fontSize: 15,
-    color: '#4B3C31',
+    color: '#B17457',
     marginBottom: 6,
   },
   barsContainer: {
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   barsTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#4B3C31',
+    color: '#B17457',
     marginBottom: 10,
   },
   barName: {
